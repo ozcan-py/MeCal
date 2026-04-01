@@ -38,9 +38,9 @@
             --cat-comm: #10B981;
             --cat-comm-light: #D1FAE5;
             --cat-comm-text: #065F46;
-            --cat-commutee: #F59E0B;
-            --cat-commutee-light: #FEF3C7;
-            --cat-commutee-text: #92400E;
+            --cat-come: #F59E0B;
+            --cat-come-light: #FEF3C7;
+            --cat-come-text: #92400E;
             --cat-finc: #8B5CF6;
             --cat-finc-light: #EDE9FE;
             --cat-finc-text: #5B21B6;
@@ -1092,8 +1092,8 @@
             "comm - prayer", "comm - podcast or effort", "comm - brain development", 
             "finc - spl/cfa/tjia", "finre - fasRe(FT, BB, Econ, TWF, Şant,BBVA)", 
             "business - inv. bank.", "nan, wass - maint (vit)", 
-            "commutee - maste", "commutee - pod", "commutee - voice", "commutee - breath", 
-            "commutee - whistle", "commutee - relfrie + fun", "swim - 3t/week 1hour", 
+            "come - maste", "come - pod", "come - voice", "come - breath", 
+            "come - whistle", "come - relfrie + fun", "swim - 3t/week 1hour", 
             "famTime - eat and joy", "read - novel/science/tech", 
             "camb - business case", "inv man - sunday evening", 
             "sleep & brushy", "sleep"
@@ -1103,7 +1103,7 @@
         const categoryColors = {
             waky: { bg: '#3B82F6', light: '#DBEAFE', text: '#1E40AF' },
             comm: { bg: '#10B981', light: '#D1FAE5', text: '#065F46' },
-            commutee: { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E' },
+            come: { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E' },
             finc: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
             finre: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
             business: { bg: '#EC4899', light: '#FCE7F3', text: '#9D174D' },
@@ -1121,7 +1121,7 @@
             const t = title.toLowerCase();
             if (t.startsWith('waky')) return 'waky';
             if (t.startsWith('comm')) return 'comm';
-            if (t.startsWith('commutee')) return 'commutee';
+            if (t.startsWith('come')) return 'come';
             if (t.startsWith('finc') || t.startsWith('finre')) return 'finc';
             if (t.startsWith('business')) return 'business';
             if (t.startsWith('swim')) return 'swim';
