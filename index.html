@@ -35,9 +35,9 @@
             --cat-waky: #3B82F6;
             --cat-waky-light: #DBEAFE;
             --cat-waky-text: #1E40AF;
-            --cat-commutem: #10B981;
-            --cat-commutem-light: #D1FAE5;
-            --cat-commutem-text: #065F46;
+            --cat-comm: #10B981;
+            --cat-comm-light: #D1FAE5;
+            --cat-comm-text: #065F46;
             --cat-commutee: #F59E0B;
             --cat-commutee-light: #FEF3C7;
             --cat-commutee-text: #92400E;
@@ -1088,8 +1088,8 @@
 
         const defaultEventsStrings = [
             "waky - wass (pine)", "waky - exercise", "waky - prep and salah", 
-            "waky - maint (hair,beard)", "waky - promilk", "commutem - h&h resist/breath", 
-            "commutem - prayer", "commutem - podcast or effort", "commutem - brain development", 
+            "waky - maint (hair,beard)", "waky - promilk", "comm - h&h resist/breath", 
+            "comm - prayer", "comm - podcast or effort", "comm - brain development", 
             "finc - spl/cfa/tjia", "finre - fasRe(FT, BB, Econ, TWF, Şant,BBVA)", 
             "business - inv. bank.", "nan, wass - maint (vit)", 
             "commutee - maste", "commutee - pod", "commutee - voice", "commutee - breath", 
@@ -1102,7 +1102,7 @@
         // Category colors
         const categoryColors = {
             waky: { bg: '#3B82F6', light: '#DBEAFE', text: '#1E40AF' },
-            commutem: { bg: '#10B981', light: '#D1FAE5', text: '#065F46' },
+            comm: { bg: '#10B981', light: '#D1FAE5', text: '#065F46' },
             commutee: { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E' },
             finc: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
             finre: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
@@ -1120,7 +1120,7 @@
         function getCategory(title) {
             const t = title.toLowerCase();
             if (t.startsWith('waky')) return 'waky';
-            if (t.startsWith('commutem')) return 'commutem';
+            if (t.startsWith('comm')) return 'comm';
             if (t.startsWith('commutee')) return 'commutee';
             if (t.startsWith('finc') || t.startsWith('finre')) return 'finc';
             if (t.startsWith('business')) return 'business';
