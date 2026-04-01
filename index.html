@@ -32,9 +32,9 @@
             --outlook-hover: #106EBE;
             
             /* COLOR PALETTE FOR CATEGORIES */
-            --cat-wake: #3B82F6;
-            --cat-wake-light: #DBEAFE;
-            --cat-wake-text: #1E40AF;
+            --cat-waky: #3B82F6;
+            --cat-waky-light: #DBEAFE;
+            --cat-waky-text: #1E40AF;
             --cat-commutem: #10B981;
             --cat-commutem-light: #D1FAE5;
             --cat-commutem-text: #065F46;
@@ -1087,8 +1087,8 @@
         const totalHours = 24;
 
         const defaultEventsStrings = [
-            "wake - wass (pine)", "wake - exercise", "wake - prep and salah", 
-            "wake - maint (hair,beard)", "wake - promilk", "commutem - h&h resist/breath", 
+            "waky - wass (pine)", "waky - exercise", "waky - prep and salah", 
+            "waky - maint (hair,beard)", "waky - promilk", "commutem - h&h resist/breath", 
             "commutem - prayer", "commutem - podcast or effort", "commutem - brain development", 
             "finc - spl/cfa/tjia", "finre - fasRe(FT, BB, Econ, TWF, Şant,BBVA)", 
             "business - inv. bank.", "nan, wass - maint (vit)", 
@@ -1101,7 +1101,7 @@
 
         // Category colors
         const categoryColors = {
-            wake: { bg: '#3B82F6', light: '#DBEAFE', text: '#1E40AF' },
+            waky: { bg: '#3B82F6', light: '#DBEAFE', text: '#1E40AF' },
             commutem: { bg: '#10B981', light: '#D1FAE5', text: '#065F46' },
             commutee: { bg: '#F59E0B', light: '#FEF3C7', text: '#92400E' },
             finc: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
@@ -1119,7 +1119,7 @@
 
         function getCategory(title) {
             const t = title.toLowerCase();
-            if (t.startsWith('wake')) return 'wake';
+            if (t.startsWith('waky')) return 'waky';
             if (t.startsWith('commutem')) return 'commutem';
             if (t.startsWith('commutee')) return 'commutee';
             if (t.startsWith('finc') || t.startsWith('finre')) return 'finc';
