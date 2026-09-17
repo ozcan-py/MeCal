@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F3F5F8">
+<title>MeCal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232446A8'/><circle cx='16' cy='16' r='7' fill='none' stroke='white' stroke-width='3'/><path d='M16 12v4l3 2' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F8; --surface:#FFFFFF; --sunk:#EAEEF3; --ink:#15213B; --ink-2:#3A465E; --muted:#697389;
+  --line:#DCE1E9; --line-2:#E9EDF2; --hour:#E3E7EE; --quarter:#F1F3F7;
+  --cobalt:#2446A8; --cobalt-soft:#E6ECFA; --turq:#0E8A8A; --coral:#D2483F; --coral-soft:#FBE9E7;
+  --saffron:#C98A12; --leaf:#3E8A4E; --plum:#7B4397; --slate:#5E6B82;
+  --ok:#2F8A57; --warn:#B7791F; --danger:#C0392B;
+  --r-s:6px; --r-m:10px; --r-l:16px;
+  --lift:0 1px 0 rgba(21,33,59,.04), 0 18px 40px -24px rgba(21,33,59,.35);
+  --font:'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1320; --surface:#131C2C; --sunk:#0F1726; --ink:#E7ECF5; --ink-2:#C2CADA; --muted:#8B96AB;
+    --line:#26324A; --line-2:#1D2839; --hour:#223049; --quarter:#18233A;
+    --cobalt:#6F8EF0; --cobalt-soft:#1B2848; --turq:#34B3B0; --coral:#F06A5F; --coral-soft:#3A1F22;
+    --saffron:#E3A93A; --leaf:#5DB36E; --plum:#B07DD0; --slate:#8C9AB3;
+    --lift:0 1px 0 rgba(0,0,0,.2), 0 18px 40px -24px rgba(0,0,0,.7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1320; --surface:#131C2C; --sunk:#0F1726; --ink:#E7ECF5; --ink-2:#C2CADA; --muted:#8B96AB;
+  --line:#26324A; --line-2:#1D2839; --hour:#223049; --quarter:#18233A;
+  --cobalt:#6F8EF0; --cobalt-soft:#1B2848; --turq:#34B3B0; --coral:#F06A5F; --coral-soft:#3A1F22;
+  --saffron:#E3A93A; --leaf:#5DB36E; --plum:#B07DD0; --slate:#8C9AB3;
+  --lift:0 1px 0 rgba(0,0,0,.2), 0 18px 40px -24px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;display:flex;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-weight:700;letter-spacing:-.01em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- rail ---------- */
+.rail{width:88px;flex:none;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:18px 0 14px;gap:4px;z-index:5}
+.brand{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:14px}
+.brand svg{width:34px;height:34px}
+.brand b{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.rail-btn{width:72px;padding:9px 0 7px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:11.5px;font-weight:600;transition:background .15s,color .15s}
+.rail-btn svg{width:21px;height:21px}
+.rail-btn:hover{color:var(--ink);background:var(--sunk)}
+.rail-btn.on{color:var(--cobalt);background:var(--cobalt-soft)}
+.rail-sp{flex:1}
+.rail-clock{font-size:13px;font-weight:600;color:var(--ink-2);margin-top:8px}
+.rail-pomo{display:none;margin-top:6px;font-size:12px;font-weight:700;color:var(--coral);background:var(--coral-soft);padding:3px 8px;border-radius:99px}
+.rail-pomo.on{display:block}
+
+/* ---------- main ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh}
+.top{display:flex;align-items:center;gap:16px;padding:18px 28px 14px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}
+.top-title{min-width:0;margin-right:auto}
+.top-title h1{font-size:26px;line-height:1.1;font-weight:800;letter-spacing:-.025em}
+.top-title p{color:var(--muted);font-size:13px;margin-top:3px}
+.top-nav{display:flex;align-items:center;gap:6px}
+.top-act{display:flex;align-items:center;gap:8px}
+.save-state{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save-state i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.save-state.err i{background:var(--danger)}
+.view{flex:1;overflow:auto;padding:22px 28px 40px}
+
+/* ---------- buttons & inputs ---------- */
+.btn{height:34px;padding:0 14px;border-radius:9px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);white-space:nowrap;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--ink-2)}
+.btn.pri{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.tomato{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink-2)}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.danger{color:var(--danger)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px;border-radius:8px}
+.btn svg{width:16px;height:16px}
+.icon-btn{width:34px;height:34px;border-radius:9px;display:inline-grid;place-items:center;color:var(--ink-2);border:1px solid var(--line);background:var(--surface)}
+.icon-btn:hover{border-color:var(--ink-2)}
+.icon-btn svg{width:16px;height:16px}
+.icon-btn.sm{width:28px;height:28px;border-radius:7px}
+.inp,.sel,textarea.inp{height:34px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:0 10px;min-width:0}
+textarea.inp{height:auto;padding:8px 10px;resize:vertical}
+.inp:focus,.sel:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px var(--cobalt-soft)}
+.inp.sm,.sel.sm{height:28px;font-size:12.5px;border-radius:7px;padding:0 8px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.check input{width:16px;height:16px;accent-color:var(--cobalt)}
+
+/* ---------- panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:18px 20px}
+.panel-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.panel-h h2{font-size:16px}
+.panel-h .grow{flex:1}
+.muted{color:var(--muted)}
+.sub-h{font-size:12.5px;font-weight:700;color:var(--muted);margin:18px 0 6px}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.notice{background:var(--cobalt-soft);border:1px solid color-mix(in srgb,var(--cobalt) 25%,transparent);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:13px;display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.notice p{flex:1;min-width:220px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--sunk);color:var(--ink-2)}
+.dot{width:9px;height:9px;border-radius:3px;background:var(--c,var(--slate));flex:none;display:inline-block}
+
+/* ---------- today: ribbon ---------- */
+.ribbon-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:18px 22px 12px;margin-bottom:18px}
+.rb-head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.rb-now{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.rb-next{color:var(--ink-2);font-size:14px}
+.rb-next b{color:var(--ink)}
+.rb-score{margin-left:auto;text-align:right}
+.rb-score strong{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.rb-score span{display:block;font-size:12px;color:var(--muted)}
+.ribbon{--lane-h:22px;position:relative;padding-bottom:22px}
+.rb-track{position:relative;height:calc(var(--lanes) * var(--lane-h) + 4px);background:
+  repeating-linear-gradient(90deg,var(--line-2) 0 1px,transparent 1px calc(100% / var(--hours)));border-radius:8px}
+.seg{position:absolute;height:calc(var(--lane-h) - 4px);margin-top:2px;border-radius:5px;background:color-mix(in srgb,var(--c) 16%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--c) 55%,transparent);border-left:3px solid var(--c);overflow:hidden;text-align:left;padding:0 5px;font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap;min-width:6px}
+.seg span{display:block;overflow:hidden;text-overflow:ellipsis;line-height:calc(var(--lane-h) - 6px)}
+.seg.done{background:var(--c);color:#fff;border-color:var(--c)}
+.seg.skip{background:repeating-linear-gradient(135deg,var(--sunk) 0 4px,var(--surface) 4px 8px);color:var(--muted);border-color:var(--line);border-left-color:var(--muted)}
+.seg:hover{z-index:2;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--c)}
+.rb-axis{position:absolute;left:0;right:0;bottom:0;height:18px}
+.rb-axis span{position:absolute;transform:translateX(-50%);font-size:10.5px;color:var(--muted);top:4px}
+.rb-needle{position:absolute;top:-6px;bottom:16px;width:2px;background:var(--coral);border-radius:2px;pointer-events:none}
+.rb-needle::before{content:"";position:absolute;top:-4px;left:-4px;width:10px;height:10px;border-radius:50%;background:var(--coral)}
+.rb-past{position:absolute;top:0;left:0;height:calc(var(--lanes) * var(--lane-h) + 4px);background:color-mix(in srgb,var(--paper) 55%,transparent);pointer-events:none;border-radius:8px 0 0 8px}
+
+/* ---------- today: grid ---------- */
+.today-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:18px;align-items:start}
+.side{display:flex;flex-direction:column;gap:18px}
+.progress{height:6px;border-radius:99px;background:var(--sunk);overflow:hidden;margin:-2px 0 10px}
+.progress i{display:block;height:100%;background:var(--turq);border-radius:99px;transition:width .3s}
+.ag{list-style:none}
+.ag-row{display:grid;grid-template-columns:30px 62px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--line-2);border-radius:8px}
+.ag-row:last-child{border-bottom:0}
+.ag-row.is-now{background:color-mix(in srgb,var(--coral) 7%,transparent)}
+.ag-row.is-now .ag-time b{color:var(--coral)}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid var(--c,var(--line));display:grid;place-items:center;color:transparent;background:var(--surface);transition:background .15s}
+.chk svg{width:14px;height:14px}
+.chk:hover{background:color-mix(in srgb,var(--c) 14%,var(--surface))}
+.is-done .chk{background:var(--c);color:#fff}
+.is-skip .chk{border-style:dashed;border-color:var(--muted);color:var(--muted)}
+.ag-time b{display:block;font-weight:700;font-size:13.5px}
+.ag-time small{color:var(--muted);font-size:11.5px}
+.ag-title{min-width:0}
+.ag-title span{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-title em{font-style:normal;color:var(--muted);font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.is-done .ag-title span{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink) 35%,transparent);color:var(--ink-2)}
+.is-skip .ag-title span{color:var(--muted)}
+.ag-act{display:flex;gap:4px;opacity:.55;transition:opacity .15s}
+.ag-row:hover .ag-act,.ag-row:focus-within .ag-act{opacity:1}
+.kind{font-size:10.5px;font-weight:700;color:var(--muted);padding:1px 6px;border:1px solid var(--line);border-radius:5px}
+
+/* ---------- focus timer ---------- */
+.focus{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:18px 20px;box-shadow:var(--lift);position:relative;overflow:hidden}
+.focus::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--coral)}
+.focus.m-short::before,.focus.m-long::before{background:var(--turq)}
+.seg-switch{display:flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px}
+.seg-switch button{flex:1;height:28px;border-radius:8px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg-switch button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ring-wrap{position:relative;width:196px;height:196px;margin:18px auto 12px}
+.ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{stroke:var(--sunk)}
+.ring-fg{stroke:var(--coral);transition:stroke-dashoffset .5s linear}
+.m-short .ring-fg,.m-long .ring-fg{stroke:var(--turq)}
+.ring-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-txt b{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.ring-txt span{font-size:12px;color:var(--muted);margin-top:6px}
+.focus-ctl{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.focus-ctl .btn.tomato{min-width:112px;justify-content:center}
+.focus-stats{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line-2);padding-top:12px;margin-top:4px}
+.focus-stats div{text-align:center}
+.focus-stats b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.focus-stats span{font-size:11.5px;color:var(--muted)}
+.rounds{display:flex;gap:5px;justify-content:center;margin-bottom:12px}
+.rounds i{width:8px;height:8px;border-radius:50%;background:var(--sunk)}
+.rounds i.on{background:var(--coral)}
+
+/* ---------- lists (tasks, goals) ---------- */
+.tl{list-style:none}
+.tl li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-2)}
+.tl li:last-child{border-bottom:0}
+.tl .chk{width:20px;height:20px;border-radius:6px}
+.tl .chk svg{width:12px;height:12px}
+.tl .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl .is-done .t,.tl li.is-done .t{text-decoration:line-through;color:var(--muted)}
+.add-line{display:flex;gap:6px;margin-top:10px}
+.add-line .inp{flex:1}
+.goal{padding:10px 0;border-bottom:1px solid var(--line-2)}
+.goal:last-child{border-bottom:0}
+.goal-top{display:flex;align-items:center;gap:8px}
+.goal-top b{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-top small{color:var(--muted);font-size:12px;white-space:nowrap}
+.gbar{height:8px;border-radius:99px;background:var(--sunk);margin-top:7px;overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:99px;background:var(--c,var(--cobalt))}
+.gbar.hit i{background:var(--ok)}
+
+/* ---------- week ---------- */
+.week-shell{display:grid;grid-template-columns:minmax(150px,var(--palw,220px)) 10px minmax(0,1fr);gap:11px;height:100%}
+.wk-split{cursor:col-resize;position:relative;touch-action:none;user-select:none}
+.wk-split::before{content:"";position:absolute;left:3px;right:3px;top:0;bottom:0;border-radius:4px;background:var(--line-2);transition:background .15s}
+.wk-split:hover::before,.wk-split.on::before{background:var(--cobalt)}
+.view.fill{padding-bottom:16px;display:flex;flex-direction:column}
+.view.fill > *{flex:1;min-height:0}
+.palette{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:14px 12px;overflow:auto}
+.palette h3{font-size:13px;margin-bottom:4px}
+.palette p{font-size:11.5px;color:var(--muted);margin-bottom:10px}
+.chip{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:grab;border:1px solid transparent;user-select:none}
+.chip:hover{background:var(--sunk);border-color:var(--line)}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.wk-row{display:grid;grid-template-columns:52px repeat(7,minmax(96px,1fr))}
+.wk-head{border-bottom:1px solid var(--line)}
+.wk-dh{padding:10px 8px 8px;border-left:1px solid var(--line-2);position:relative}
+.wk-dh .dn{font-size:11.5px;font-weight:600;color:var(--muted)}
+.wk-dh .dd{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1.1;display:flex;align-items:center;gap:6px}
+.wk-dh.today .dd b{background:var(--cobalt);color:#fff;border-radius:8px;padding:0 6px}
+.wk-dh .mini{height:4px;background:var(--sunk);border-radius:99px;margin-top:6px;overflow:hidden}
+.wk-dh .mini i{display:block;height:100%;background:var(--turq)}
+.wk-dh .dh-act{position:absolute;top:8px;right:6px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.wk-dh:hover .dh-act,.wk-dh:focus-within .dh-act{opacity:1}
+.wk-un{border-bottom:1px solid var(--line)}
+.wk-uc{border-left:1px solid var(--line-2);padding:5px;display:flex;flex-direction:column;gap:3px;min-height:34px}
+.wk-uc .utag{font-size:11px;font-weight:600;color:var(--ink-2);background:var(--sunk);border-radius:6px;padding:3px 6px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-uc .utag:hover{background:var(--line)}
+.wk-scroll{flex:1;overflow:auto;min-height:0}
+.wk-body{position:relative}
+.wk-gut{position:relative;border-right:1px solid var(--line-2)}
+.wk-gut span{position:absolute;right:8px;transform:translateY(-50%);font-size:10.5px;color:var(--muted)}
+.wk-col{position:relative;border-left:1px solid var(--line-2);
+  background-image:linear-gradient(var(--hour) 1px,transparent 1px),linear-gradient(var(--quarter) 1px,transparent 1px);
+  background-size:100% var(--hp),100% calc(var(--hp) / 2)}
+.wk-col.today{background-color:color-mix(in srgb,var(--cobalt) 4%,transparent)}
+.wk-col.over{background-color:color-mix(in srgb,var(--cobalt) 9%,transparent)}
+.drop-ind{position:absolute;left:2px;right:2px;height:2px;background:var(--cobalt);pointer-events:none;display:none;z-index:4}
+.drop-ind::after{content:attr(data-t);position:absolute;left:0;top:-17px;font-size:10.5px;font-weight:700;color:#fff;background:var(--cobalt);padding:1px 5px;border-radius:4px}
+.now-line{position:absolute;left:0;right:0;height:2px;background:var(--coral);z-index:3;pointer-events:none}
+.now-line::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--coral)}
+.blk{position:absolute;padding:2px 5px;border-radius:6px;font-size:11px;line-height:1.25;overflow:hidden;cursor:grab;
+  background:color-mix(in srgb,var(--c) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-left:3px solid var(--c);color:var(--ink);text-align:left;z-index:1}
+.blk:hover{z-index:2;box-shadow:0 4px 14px -6px rgba(0,0,0,.35)}
+.blk .bt{font-weight:700;margin-right:4px;color:var(--ink-2)}
+.blk .bn{font-weight:600}
+.blk.done{background:var(--c);color:#fff;border-color:var(--c)}
+.blk.done .bt{color:rgba(255,255,255,.85)}
+.blk.skip{background:repeating-linear-gradient(135deg,var(--sunk) 0 4px,var(--surface) 4px 8px);color:var(--muted);border-left-color:var(--muted)}
+.blk.task{border-style:dashed;border-left-style:solid}
+.blk .rz{position:absolute;left:0;right:0;bottom:0;height:6px;cursor:ns-resize}
+.blk.dragging{opacity:.4}
+
+/* ---------- month ---------- */
+.month-shell{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden}
+.mh{padding:10px 10px 8px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+.mc{min-height:118px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:8px;text-align:left;display:flex;flex-direction:column;gap:4px;background:color-mix(in srgb,var(--turq) var(--heat,0%),var(--surface));transition:outline-color .15s}
+.mc:nth-child(7n){border-right:0}
+.mc:hover{outline:2px solid var(--cobalt);outline-offset:-2px}
+.mc.out{opacity:.45}
+.mc .md{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+.mc.today .md b{background:var(--cobalt);color:#fff;border-radius:7px;padding:0 6px}
+.mc .mr{font-size:11px;font-weight:600;color:var(--ink-2)}
+.mc .mp{font-size:11px;padding:2px 6px;border-radius:5px;background:var(--surface);border-left:3px solid var(--c);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.mc .mp.done{text-decoration:line-through;color:var(--muted)}
+.mc .mm{font-size:11px;color:var(--muted)}
+.legend{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin-top:10px}
+.legend i{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+
+/* ---------- year ---------- */
+.year-shell{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.ygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.ym{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:12px;text-align:left;display:block}
+.ym:hover{border-color:var(--cobalt)}
+.ym-h{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between}
+.ym-h small{color:var(--muted);font-weight:600;font-size:12px}
+.ydays{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.yd{display:block}
+.yd{aspect-ratio:1;border-radius:3px;background:var(--sunk);font-size:0}
+.yd.l1{background:color-mix(in srgb,var(--turq) 25%,var(--surface))}
+.yd.l2{background:color-mix(in srgb,var(--turq) 50%,var(--surface))}
+.yd.l3{background:color-mix(in srgb,var(--turq) 75%,var(--surface))}
+.yd.l4{background:var(--turq)}
+.yd.fut{background:transparent;border:1px solid var(--line-2)}
+.yd.tdy{outline:2px solid var(--cobalt);outline-offset:1px}
+.yd.blank{background:transparent}
+
+/* ---------- routines ---------- */
+.rt-table{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);overflow:auto}
+.rt-row{display:grid;grid-template-columns:26px minmax(180px,1.6fr) 150px 232px 92px 78px 110px 96px 70px;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line-2);min-width:1120px}
+.rt-row:last-child{border-bottom:0}
+.rt-row.hd{font-size:12px;font-weight:600;color:var(--muted);background:var(--sunk);padding-top:9px;padding-bottom:9px}
+.rt-row.paused{opacity:.5}
+.rt-row.drop{box-shadow:inset 0 2px 0 var(--cobalt)}
+.handle{cursor:grab;color:var(--muted);display:grid;place-items:center}
+.handle svg{width:14px;height:14px}
+.rt-name{display:flex;align-items:center;gap:8px;min-width:0}
+.rt-name button{font-weight:600;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-name button:hover{color:var(--cobalt)}
+.days{display:flex;gap:3px}
+.days button{width:29px;height:26px;border-radius:6px;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line)}
+.days button.on{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.rate{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.rate .gbar{flex:1;margin:0;height:6px}
+.streak{font-size:12px;font-weight:700}
+.streak small{font-weight:500;color:var(--muted)}
+.cat-list{display:flex;flex-wrap:wrap;gap:8px}
+.cat-ed{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9px;padding:4px 6px 4px 8px;background:var(--surface)}
+.cat-ed .inp{width:130px;border:0;height:26px;padding:0 4px}
+.swatches{display:flex;gap:5px;flex-wrap:wrap}
+.sw{width:22px;height:22px;border-radius:6px;background:var(--c);border:2px solid transparent}
+.sw.on{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--surface)}
+
+/* ---------- plan ---------- */
+.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:start}
+.plan-col h2{font-size:17px}
+.plan-col .per{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ---------- reports ---------- */
+.rep-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;margin-bottom:18px}
+.kpi{background:var(--surface);padding:16px 18px}
+.kpi b{display:block;font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi .dlt{font-size:12px;font-weight:700;margin-left:6px}
+.dlt.up{color:var(--ok)} .dlt.dn{color:var(--danger)}
+.rep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:10px;font-family:var(--font)}
+.chart text.bv{fill:var(--ink);font-weight:700;font-size:10px}
+.rtab{width:100%;border-collapse:collapse;font-size:13px}
+.rtab th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+.rtab td{padding:7px 8px;border-bottom:1px solid var(--line-2)}
+.rtab td.n{text-align:right;font-weight:600;white-space:nowrap}
+.rtab .gbar{margin:0;min-width:80px}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--sunk);margin:6px 0 10px}
+.stack i{display:block;height:100%}
+.report-text{white-space:pre-wrap;font-size:13.5px;line-height:1.6;background:var(--sunk);border-radius:10px;padding:14px 16px;border:1px solid var(--line-2)}
+.arch{list-style:none}
+.arch li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.arch li b{flex:1}
+
+/* ---------- outlook & settings ---------- */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.steps{counter-reset:s;list-style:none;margin:10px 0 14px}
+.steps li{counter-increment:s;position:relative;padding:0 0 10px 34px;color:var(--ink-2)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:22px;height:22px;border-radius:50%;background:var(--cobalt-soft);color:var(--cobalt);font-weight:800;font-size:12px;display:grid;place-items:center}
+.steps li b{color:var(--ink)}
+.tag-rec{font-size:11.5px;font-weight:700;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);padding:2px 8px;border-radius:99px}
+.tag-opt{font-size:11.5px;font-weight:700;color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);padding:2px 8px;border-radius:99px}
+.log{font-size:12px;background:var(--sunk);border-radius:8px;padding:10px 12px;max-height:180px;overflow:auto;white-space:pre-wrap;margin-top:12px;color:var(--ink-2)}
+.set-sec{margin-bottom:18px}
+.set-sec h2{font-size:16px;margin-bottom:12px}
+.kv{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+code{font-size:12px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+
+/* ---------- background ---------- */
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background-position:center;background-size:cover}
+.bg::after{content:"";position:absolute;inset:0;background:var(--paper);opacity:var(--bg-dim,0)}
+body.has-bg .top{background:color-mix(in srgb,var(--paper) 72%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+body.has-bg .rail{background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.bg-opts{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 2px}
+.bg-sw{width:56px;height:40px;border-radius:9px;border:2px solid var(--line);background-size:cover;background-position:center;background-color:var(--paper);flex:none}
+.bg-sw:hover{border-color:var(--ink-2)}
+.bg-sw.on{border-color:var(--cobalt);box-shadow:0 0 0 3px var(--cobalt-soft)}
+.bg-sw.add{display:grid;place-items:center;color:var(--muted);font-size:11px;font-weight:600}
+input[type=range].rng{accent-color:var(--cobalt);width:200px;max-width:100%}
+
+/* ---------- routine slots ---------- */
+.slot-row{display:flex;gap:6px;align-items:center}
+.slot-row .sel{flex:1}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.pill.miss{color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.pill.run{color:var(--cobalt);background:var(--cobalt-soft)}
+
+/* ---------- dialog & toast ---------- */
+dialog{border:0;border-radius:18px;padding:0;background:var(--surface);color:var(--ink);width:min(520px,calc(100vw - 32px));box-shadow:0 30px 80px -20px rgba(0,0,0,.45);margin:auto}
+dialog::backdrop{background:rgba(12,19,32,.45)}
+.dlg-h{display:flex;align-items:center;gap:10px;padding:18px 20px 6px}
+.dlg-h h3{font-size:18px;flex:1}
+.dlg-b{padding:10px 20px 6px;display:flex;flex-direction:column;gap:12px;max-height:70vh;overflow:auto}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px 18px;flex-wrap:wrap}
+.dlg-f .left{margin-right:auto;display:flex;gap:6px;flex-wrap:wrap}
+.status-row{display:flex;gap:6px;flex-wrap:wrap}
+.status-row .btn.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.toasts{position:fixed;left:104px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.toast{background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:10px;font-size:13px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);animation:tin .2s ease-out}
+.toast button{color:var(--surface);font-weight:700;text-decoration:underline}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+input[type=file]{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .today-grid,.month-shell,.year-shell{grid-template-columns:1fr}
+  .plan-grid{grid-template-columns:1fr}
+  .rep-grid,.two{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  body{flex-direction:column-reverse}
+  .rail{width:100%;height:auto;flex-direction:row;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);overflow-x:auto}
+  .brand,.rail-sp,.rail-clock{display:none}
+  .rail{justify-content:flex-start}
+  .rail-btn{width:auto;min-width:0;flex:1 0 42px;padding:6px 2px;font-size:9.5px;letter-spacing:-.01em}
+  .main{height:auto;flex:1;min-height:0}
+  .top{padding:14px 16px 10px}
+  .top-title h1{font-size:21px}
+  .top-nav{margin-left:0}
+  .view{padding:16px 14px 30px}
+  .week-shell{grid-template-columns:1fr}
+  .wk-split{display:none}
+  .wk-dh .dh-act{opacity:1}
+  .wk{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+  .wk-head,.wk-un,.wk-scroll{min-width:680px}
+  .wk-row{grid-template-columns:44px repeat(7,minmax(88px,1fr))}
+  .palette{display:none}
+  .rb-now{font-size:34px}
+  .rb-axis span:nth-child(even){display:none}
+  .toasts{left:16px;bottom:84px}
+  .ag-row{grid-template-columns:28px 52px minmax(0,1fr)}
+  .ag-act{grid-column:2 / -1;opacity:1}
+}
+</style>
+</head>
+<body>
+<nav class="rail" aria-label="Görünümler">
+  <div class="brand" aria-hidden="true">
+    <svg viewBox="0 0 34 34"><rect width="34" height="34" rx="9" fill="var(--cobalt)"/>
+      <path d="M17 5a12 12 0 0 1 12 12H17z" fill="#fff" opacity=".95"/>
+      <path d="M17 29A12 12 0 0 1 5 17h12z" fill="#fff" opacity=".55"/>
+      <circle cx="17" cy="17" r="3.2" fill="var(--coral)"/></svg>
+    <b>MeCal</b>
+  </div>
+  <button class="rail-btn" data-act="go" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Bugün</button>
+  <button class="rail-btn" data-act="go" data-view="week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9 4.5v15M15 4.5v15"/></svg>Hafta</button>
+  <button class="rail-btn" data-act="go" data-view="month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9 9.5v10M15 9.5v10"/></svg>Ay</button>
+  <button class="rail-btn" data-act="go" data-view="year"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" fill="currentColor"/></svg>Yıl</button>
+  <button class="rail-btn" data-act="go" data-view="routines"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1"/><path d="M17.8 3.5v3.6h-3.6M6.2 20.5v-3.6h3.6"/></svg>Rutinler</button>
+  <button class="rail-btn" data-act="go" data-view="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Hedefler</button>
+  <button class="rail-btn" data-act="go" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/></svg>Rapor</button>
+  <button class="rail-btn" data-act="go" data-view="outlook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/></svg>Outlook</button>
+  <div class="rail-sp"></div>
+  <button class="rail-btn" data-act="go" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="8" cy="18" r="2" fill="var(--surface)"/></svg>Ayarlar</button>
+  <div class="rail-pomo" id="railPomo" title="Odak sayacı"></div>
+  <div class="rail-clock" id="railClock">--:--</div>
+</nav>
+
+<div class="main">
+  <header class="top">
+    <div class="top-title"><h1 id="hTitle">Bugün</h1><p id="hSub"></p></div>
+    <div class="top-nav" id="hNav">
+      <button class="icon-btn" data-act="nav" data-dir="-1" aria-label="Önceki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="btn" data-act="nav" data-dir="0">Bugün</button>
+      <button class="icon-btn" data-act="nav" data-dir="1" aria-label="Sonraki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="top-act">
+      <span class="save-state" id="saveState"><i></i><span>Kaydedildi</span></span>
+      <button class="btn pri" data-act="newTask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Görev</button>
+    </div>
+  </header>
+  <main class="view" id="view"></main>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm" onsubmit="return false">
+  <div class="dlg-h"><h3 id="dlgTitle"></h3><button type="button" class="icon-btn sm" data-act="closeDlg" aria-label="Kapat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b" id="dlgBody"></div>
+  <div class="dlg-f" id="dlgFoot"></div>
+</form></dialog>
+<div class="bg" id="bgLayer" aria-hidden="true"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<input type="file" id="fileImport" accept=".json,application/json">
+<input type="file" id="bgFile" accept="image/*">
+<script>
+/* MeCal v8 — rutin (günde çoklu saat), görev, hedef, odak sayacı, rapor, Outlook, arka planlar */
+if (window.opener && window.opener !== window && /[#&?](code|error)=/.test(location.hash + location.search)) {
+  document.body.innerHTML = '<p style="font-family:sans-serif;padding:2rem">Microsoft oturumu tamamlanıyor…</p>';
+  throw new Error('msal-popup-window');
+}
+
+/* ---------- utilities ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = p => p + '_' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-5);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const isoDow = d => (d.getDay() + 6) % 7 + 1;
+const mondayOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(x, 1 - isoDow(x)); };
+const toMin = t => { const [a, b] = t.split(':').map(Number); return a * 60 + b; };
+const fromMin = m => pad(Math.floor(((m % 1440) + 1440) % 1440 / 60)) + ':' + pad(((m % 60) + 60) % 60);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const todayStr = () => ymd(new Date());
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const DOW = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const DOW_L = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const MON = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const COLORS = { cobalt:'#2446A8', turq:'#0E8A8A', coral:'#D2483F', saffron:'#C98A12', leaf:'#3E8A4E', plum:'#7B4397', slate:'#5E6B82', rose:'#C2477A', sky:'#2F86C9', olive:'#7A8A2E' };
+const DURS = [5, 10, 15, 20, 30, 45, 60, 75, 90, 120, 150, 180];
+const REMS = [[0,'Yok'],[5,'5 dk önce'],[10,'10 dk önce'],[15,'15 dk önce'],[30,'30 dk önce'],[60,'1 sa önce']];
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
+  skip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h11M12 7l5 5-5 5M19.5 6v12"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18.5" cy="12" r="1.8"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  grip: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>'
+};
+function fmtH(min) { min = Math.round(min); const h = Math.floor(min / 60), m = min % 60; return h ? (m ? `${h} sa ${m} dk` : `${h} sa`) : `${m} dk`; }
+function fmtDate(ds, withYear = true) { const d = parseYmd(ds); return `${d.getDate()} ${MON[d.getMonth()]}${withYear ? ' ' + d.getFullYear() : ''}`; }
+function fmtRange(a, b) {
+  const x = parseYmd(a), y = parseYmd(b);
+  if (x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth()) return `${x.getDate()}–${y.getDate()} ${MON[x.getMonth()]} ${x.getFullYear()}`;
+  if (x.getFullYear() === y.getFullYear()) return `${x.getDate()} ${MON[x.getMonth()]} – ${y.getDate()} ${MON[y.getMonth()]} ${y.getFullYear()}`;
+  return `${fmtDate(a)} – ${fmtDate(b)}`;
+}
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = t.getUTCFullYear();
+  return { y, w: Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7) };
+}
+function periodKey(h, d) {
+  if (h === 'week') { const w = isoWeek(d); return `${w.y}-W${pad(w.w)}`; }
+  if (h === 'month') return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  return String(d.getFullYear());
+}
+function periodRange(h, d) {
+  if (h === 'week') { const m = mondayOf(d); return [ymd(m), ymd(addDays(m, 6))]; }
+  if (h === 'month') return [ymd(new Date(d.getFullYear(), d.getMonth(), 1)), ymd(new Date(d.getFullYear(), d.getMonth() + 1, 0))];
+  return [`${d.getFullYear()}-01-01`, `${d.getFullYear()}-12-31`];
+}
+function periodLabel(h, d) {
+  const [a, b] = periodRange(h, d);
+  if (h === 'week') return { t: `Hafta ${isoWeek(d).w}`, s: fmtRange(a, b) };
+  if (h === 'month') return { t: `${MON[d.getMonth()]} ${d.getFullYear()}`, s: `${parseYmd(b).getDate()} gün` };
+  return { t: String(d.getFullYear()), s: 'Yıllık' };
+}
+function rangeDates(from, to) { const out = []; for (let d = parseYmd(from); ymd(d) <= to; d = addDays(d, 1)) out.push(ymd(d)); return out; }
+
+/* ---------- state ---------- */
+const KEY = 'mecal_v7';
+let S = null;
+let view = 'today';
+let cur = new Date();
+
+function defaults() {
+  const now = new Date().toISOString();
+  return {
+    v: 8, meta: { createdAt: now, updatedAt: now, seeded: false, migrated: false },
+    settings: { dayStart: 5, dayEnd: 24, focus: 25, short: 5, long: 15, every: 4, autoBreak: false, sound: true,
+      reminder: 5, busyFree: true, report: 'weekly', theme: 'auto', clientId: '', calendarName: 'MeCal', tz: 'Europe/Istanbul',
+      bg: { type: 'plain', value: '', dim: 30 } },
+    categories: [
+      { id: 'c_sabah', name: 'Sabah & bakım', color: COLORS.turq },
+      { id: 'c_beden', name: 'Beden', color: COLORS.leaf },
+      { id: 'c_zihin', name: 'Zihin & gelişim', color: COLORS.plum },
+      { id: 'c_kariyer', name: 'Kariyer & finans', color: COLORS.cobalt },
+      { id: 'c_aile', name: 'Aile & sosyal', color: COLORS.coral },
+      { id: 'c_aksam', name: 'Akşam', color: COLORS.slate },
+      { id: 'c_genel', name: 'Genel', color: COLORS.saffron }
+    ],
+    routines: [], tasks: [], log: {}, overrides: {}, sessions: [], goals: [], reports: [],
+    pomo: { mode: 'focus', endsAt: null, left: null, round: 0, link: null, startedAt: null },
+    graph: { calendarId: null, map: {} },
+    ui: { view: 'today', repRange: 'thisWeek', repFrom: '', repTo: '', palW: 220 }
+  };
+}
+function normalize(o) {
+  const d = defaults();
+  const out = Object.assign(d, o);
+  out.settings = Object.assign(defaults().settings, o.settings || {});
+  out.meta = Object.assign(defaults().meta, o.meta || {});
+  out.pomo = Object.assign(defaults().pomo, o.pomo || {});
+  out.graph = Object.assign(defaults().graph, o.graph || {});
+  out.ui = Object.assign(defaults().ui, o.ui || {});
+  out.settings.bg = Object.assign({ type: 'plain', value: '', dim: 30 }, out.settings.bg || {});
+  ['routines', 'tasks', 'sessions', 'goals', 'reports', 'categories'].forEach(k => { if (!Array.isArray(out[k])) out[k] = []; });
+  ['log', 'overrides'].forEach(k => { if (!out[k] || typeof out[k] !== 'object') out[k] = {}; });
+  out.routines.forEach(r => {
+    r.days = r.days || []; r.paused = r.paused || []; if (r.reminder == null) r.reminder = out.settings.reminder;
+    if (!Array.isArray(r.slots) || !r.slots.length) r.slots = [{ id: uid('sl'), time: r.time || null, dur: r.dur || 15 }];
+    r.slots.forEach(sl => { if (!sl.id) sl.id = uid('sl'); if (!sl.dur) sl.dur = 15; if (sl.time === undefined) sl.time = null; });
+    delete r.time; delete r.dur;
+  });
+  if ((Number(out.v) || 0) < 8) {
+    const s0 = {}; out.routines.forEach(r => s0[r.id] = r.slots[0].id);
+    [out.log, out.overrides].forEach(store => Object.keys(store).forEach(ds => {
+      const day = store[ds];
+      Object.keys(day).forEach(k => { if (!k.includes('.') && s0[k]) { day[k + '.' + s0[k]] = day[k]; delete day[k]; } });
+    }));
+    out.pomo.link = null;
+    out.v = 8;
+  }
+  out.goals.forEach(g => { g.counts = g.counts || {}; });
+  return out;
+}
+
+function guessCat(title) {
+  const t = title.toLowerCase();
+  if (/cfa|finok|fin|spl|tjia|camb|inv|bank|business|linkedin|lps|afc/.test(t)) return 'c_kariyer';
+  if (/workout|swim|exerc|promilk|vit|wass/.test(t)) return 'c_beden';
+  if (/prep|beard|hair|dry|maint/.test(t)) return 'c_sabah';
+  if (/famtime|fam|relfrie|friend/.test(t)) return 'c_aile';
+  if (/slep|sleep|bru|spli/.test(t)) return 'c_aksam';
+  if (/com|nov|read|write|science|tech|pod|voice|breath|note|knab|tgnam/.test(t)) return 'c_zihin';
+  return 'c_genel';
+}
+function newRoutine(p = {}) {
+  const r = Object.assign({ id: uid('r'), title: 'Yeni rutin', note: '', catId: 'c_genel', days: [1, 2, 3, 4, 5, 6, 7],
+    reminder: S ? S.settings.reminder : 5, start: todayStr(), end: null, paused: [] }, p);
+  if (!Array.isArray(r.slots) || !r.slots.length) r.slots = [{ id: uid('sl'), time: p.time !== undefined ? p.time : null, dur: p.dur || 15 }];
+  delete r.time; delete r.dur;
+  return r;
+}
+function seedSample() {
+  const names = ['wass x 2', 'lps/afc/tjia', 'workout', 'prep (dry+sabnosab+beard+hair)', 'salah',
+    'com (pod+pray+h&hres+breath+eng+kwik)', 'lps/afc/tjia', 'finok w/ fastok', 'promilk / vit', 'vni. knab.notetakeing',
+    'spl/cfa/tjia', 'com (pod+maste+voice+breath+whistle)', 'famtime', 'camb', 'nov/science/tech/finok/linkedin',
+    'slep/bru/spli', 'vni. tgnam.', 'che', 'write'];
+  const known = { 0: '07:00', 1: '09:00', 3: '07:15', 9: '09:00' };
+  S.routines = names.map((n, i) => newRoutine({ title: n, catId: guessCat(n), time: known[i] || null }));
+  S.meta.seeded = true;
+}
+
+/* v6 (eski MeCal) → v7 */
+function migrateV6(old) {
+  const tpls = old.templates || [];
+  const planned = (old.schedule && old.schedule.length ? old.schedule : (old.dailyPlan || []));
+  const slotMin = s => ((4 * 60 + s * 15) % 1440);
+  const byTitle = {};
+  planned.forEach(e => { (byTitle[e.title] = byTitle[e.title] || []).push(e); });
+  const groups = {};
+  tpls.forEach(t => { (groups[t.title] = groups[t.title] || []).push(t); });
+  const routines = [];
+  const mode = arr => { const c = {}; arr.forEach(x => c[x] = (c[x] || 0) + 1); return Object.entries(c).sort((a, b) => b[1] - a[1])[0]; };
+  tpls.forEach(t => {
+    const same = groups[t.title];
+    const idx = same.indexOf(t);
+    const entries = byTitle[t.title] || [];
+    const r = newRoutine({ id: uid('r'), title: t.title, note: t.desc || '', catId: guessCat(t.title), time: null });
+    if (entries.length) {
+      const counts = {};
+      entries.forEach(e => { const m = slotMin(e.slot); (counts[m] = counts[m] || []).push(e); });
+      const top = Object.entries(counts).sort((a, b) => b[1].length - a[1].length).slice(0, same.length)
+        .sort((a, b) => Number(a[0]) - Number(b[0]));
+      const pick = top[Math.min(idx, top.length - 1)];
+      const es = pick[1];
+      r.slots[0].time = fromMin(Number(pick[0]));
+      r.slots[0].dur = Number(mode(es.map(e => e.durationMins || 15))[0]) || 15;
+      r.days = [...new Set(es.map(e => isoDow(parseYmd(e.date))))].sort();
+    }
+    routines.push(r);
+  });
+  const tset = new Set(tpls.map(t => t.title));
+  const tasks = [];
+  [...(old.schedule || []), ...(old.adhocTasks || [])].forEach(e => {
+    if (!e.isAdhoc && tset.has(e.title)) return;
+    tasks.push({ id: uid('t'), title: e.title, note: e.desc || '', catId: guessCat(e.title), scope: 'day', date: e.date,
+      period: null, time: fromMin(slotMin(e.slot || 0)), dur: e.durationMins || 30, reminder: S.settings.reminder,
+      done: false, doneAt: null, createdAt: new Date().toISOString() });
+  });
+  S.routines = routines;
+  S.tasks = [...S.tasks, ...tasks];
+  S.meta.migrated = true; S.meta.seeded = false;
+  return { routines: routines.length, tasks: tasks.length };
+}
+
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) {}
+  if (raw) { try { S = normalize(JSON.parse(raw)); } catch (e) { S = defaults(); } }
+  else {
+    S = defaults();
+    let old = null;
+    try { old = localStorage.getItem('mecal_data_v6'); } catch (e) {}
+    if (old) { try { migrateV6(JSON.parse(old)); } catch (e) { seedSample(); } }
+    else seedSample();
+    persist();
+  }
+  view = S.ui.view || 'today';
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+let backupTimer = null;
+function persist() {
+  S.meta.updatedAt = new Date().toISOString();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); setSaveState(true); }
+  catch (e) { setSaveState(false); }
+  clearTimeout(backupTimer); backupTimer = setTimeout(writeBackup, 1500);
+}
+function setSaveState(ok) {
+  const el = $('#saveState'); if (!el) return;
+  el.classList.toggle('err', !ok);
+  el.lastElementChild.textContent = ok ? 'Kaydedildi' : 'Kaydedilemedi';
+}
+function commit() { persist(); render(); }
+
+/* ---------- lookups ---------- */
+const cat = id => S.categories.find(c => c.id === id) || { id: 'x', name: 'Kategorisiz', color: COLORS.slate };
+const routine = id => S.routines.find(r => r.id === id);
+const task = id => S.tasks.find(t => t.id === id);
+/* instance kimliği: "rutinId.slotId" — aynı rutin bir günde birden çok kez planlanabilir */
+const ridOf = iid => String(iid).split('.')[0];
+const sidOf = iid => String(iid).split('.')[1] || null;
+const rtOf = iid => routine(ridOf(iid));
+function slotOf(iid) { const r = rtOf(iid); if (!r) return null; return r.slots.find(s => s.id === sidOf(iid)) || null; }
+
+function isScheduled(r, ds) {
+  if (!r.days.includes(isoDow(parseYmd(ds)))) return false;
+  if (ds < r.start) return false;
+  if (r.end && ds > r.end) return false;
+  if (r.paused.some(p => ds >= p.from && (!p.to || ds <= p.to))) return false;
+  return true;
+}
+const isPausedNow = r => r.paused.some(p => !p.to || p.to >= todayStr());
+function ov(ds, rid) { return (S.overrides[ds] || {})[rid] || {}; }
+function setOv(ds, rid, patch) {
+  const o = Object.assign({}, ov(ds, rid), patch);
+  Object.keys(o).forEach(k => { if (o[k] == null || o[k] === false) delete o[k]; });
+  if (!S.overrides[ds]) S.overrides[ds] = {};
+  if (Object.keys(o).length) S.overrides[ds][rid] = o; else delete S.overrides[ds][rid];
+  if (!Object.keys(S.overrides[ds]).length) delete S.overrides[ds];
+}
+function statusOf(ds, rid) { return (S.log[ds] || {})[rid] || null; }
+function setLog(ds, rid, st) {
+  if (!S.log[ds]) S.log[ds] = {};
+  if (st) S.log[ds][rid] = st; else delete S.log[ds][rid];
+  if (!Object.keys(S.log[ds]).length) delete S.log[ds];
+}
+
+function routinesFor(ds) {
+  const out = [];
+  const ovs = S.overrides[ds] || {};
+  S.routines.forEach(r => {
+    const sched = isScheduled(r, ds);
+    r.slots.forEach((sl, sx) => {
+      const iid = r.id + '.' + sl.id;
+      const o = ovs[iid] || {};
+      if (o.removed) return;
+      if (!sched && !o.added) return;
+      out.push({ kind: 'routine', id: iid, rid: r.id, sx, date: ds, title: r.title, catId: r.catId, note: r.note,
+        time: o.time || sl.time, dur: o.dur || sl.dur, status: statusOf(ds, iid), moved: !!(o.time || o.dur || o.added) });
+    });
+    Object.keys(ovs).forEach(k => {
+      if (ridOf(k) !== r.id) return;
+      const sid = sidOf(k);
+      if (!sid || !sid.startsWith('x')) return;
+      const o = ovs[k];
+      if (!o.added) return;
+      out.push({ kind: 'routine', id: k, rid: r.id, sx: 99, date: ds, title: r.title, catId: r.catId, note: r.note,
+        time: o.time || null, dur: o.dur || r.slots[0].dur, status: statusOf(ds, k), moved: true });
+    });
+  });
+  return out;
+}
+function tasksFor(ds) {
+  return S.tasks.filter(t => t.scope === 'day' && t.date === ds).map(t => ({ kind: 'task', id: t.id, date: ds, title: t.title,
+    catId: t.catId, note: t.note, time: t.time, dur: t.dur || 30, status: t.done ? 'done' : null }));
+}
+function sortItems(a, b) {
+  if (!a.time && !b.time) return a.title.localeCompare(b.title, 'tr');
+  if (!a.time) return 1; if (!b.time) return -1;
+  return toMin(a.time) - toMin(b.time) || (a.kind === 'routine' ? -1 : 1);
+}
+function itemsFor(ds) {
+  const ord = new Map(S.routines.map((r, i) => [r.id, i]));
+  return [...routinesFor(ds), ...tasksFor(ds)].sort((a, b) => {
+    if (!a.time && !b.time && a.kind === 'routine' && b.kind === 'routine')
+      return (ord.get(a.rid) - ord.get(b.rid)) || ((a.sx || 0) - (b.sx || 0));
+    return sortItems(a, b);
+  });
+}
+const itemKey = it => `${it.kind}|${it.id}|${it.date}`;
+function itemFromKey(k) {
+  const [kind, id, date] = k.split('|');
+  const list = kind === 'routine' ? routinesFor(date) : tasksFor(date);
+  return list.find(x => x.id === id) || null;
+}
+function dayStats(ds) {
+  const rs = routinesFor(ds);
+  let done = 0, skip = 0;
+  rs.forEach(r => { if (r.status === 'done') done++; else if (r.status === 'skip') skip++; });
+  return { total: rs.length, done, skip };
+}
+function rangeStats(from, to) {
+  const end = to > todayStr() ? todayStr() : to;
+  let total = 0, done = 0, skip = 0;
+  if (from <= end) rangeDates(from, end).forEach(ds => { const s = dayStats(ds); total += s.total; done += s.done; skip += s.skip; });
+  return { total, done, skip, rate: total ? done / total : null };
+}
+function routineStats(from, to, rid) {
+  const end = to > todayStr() ? todayStr() : to;
+  const m = {};
+  S.routines.forEach(r => m[r.id] = { r, plan: 0, done: 0, skip: 0, planMin: 0, doneMin: 0 });
+  if (from <= end) rangeDates(from, end).forEach(ds => routinesFor(ds).forEach(i => {
+    const x = m[i.rid]; if (!x) return; x.plan++; x.planMin += i.dur;
+    if (i.status === 'done') { x.done++; x.doneMin += i.dur; } else if (i.status === 'skip') x.skip++;
+  }));
+  if (rid) return m[rid];
+  return Object.values(m).filter(x => x.plan > 0);
+}
+/* Bir rutinin gündeki tüm instance'ları (hafif; streak için) */
+function instancesOf(r, ds) {
+  const ovs = S.overrides[ds] || {}; const out = [];
+  const sched = isScheduled(r, ds);
+  r.slots.forEach(sl => { const iid = r.id + '.' + sl.id, o = ovs[iid] || {};
+    if (o.removed) return; if (!sched && !o.added) return; out.push(statusOf(ds, iid)); });
+  Object.keys(ovs).forEach(k => { if (ridOf(k) === r.id && (sidOf(k) || '').startsWith('x') && ovs[k].added) out.push(statusOf(ds, k)); });
+  return out;
+}
+function streak(rid) {
+  const r = routine(rid); if (!r) return 0;
+  const dayState = ds => {
+    const st = instancesOf(r, ds);
+    if (!st.length) return 'none';
+    if (st.every(x => x === 'skip')) return 'skip';
+    if (st.filter(x => x !== 'skip').every(x => x === 'done')) return 'done';
+    return 'miss';
+  };
+  let d = new Date(); let n = 0;
+  if (dayState(todayStr()) !== 'done') d = addDays(d, -1);
+  for (let i = 0; i < 800; i++) {
+    const ds = ymd(d);
+    if (ds < r.start) break;
+    const s = dayState(ds);
+    if (s === 'done') n++;
+    else if (s === 'miss') break;
+    d = addDays(d, -1);
+  }
+  return n;
+}
+function sessionsIn(from, to) { return S.sessions.filter(s => s.date >= from && s.date <= to); }
+function tasksDoneIn(from, to) { return S.tasks.filter(t => t.done && t.doneAt && t.doneAt.slice(0, 10) >= from && t.doneAt.slice(0, 10) <= to); }
+
+/* ---------- mutations ---------- */
+function toggleDone(it) {
+  if (it.kind === 'routine') setLog(it.date, it.id, it.status === 'done' ? null : 'done');
+  else { const t = task(it.id); t.done = !t.done; t.doneAt = t.done ? new Date().toISOString() : null; }
+}
+function toggleSkip(it) { if (it.kind === 'routine') setLog(it.date, it.id, it.status === 'skip' ? null : 'skip'); }
+function moveItem(it, toDate, toTime) {
+  if (it.kind === 'task') { const t = task(it.id); t.date = toDate; t.time = toTime; t.scope = 'day'; t.period = null; return it.id; }
+  const iid = it.id, r = rtOf(iid), sl = slotOf(iid);
+  if (it.date === toDate) { setOv(toDate, iid, { time: (sl && toTime === sl.time) ? null : toTime }); return iid; }
+  const st = statusOf(it.date, iid);
+  const src = ov(it.date, iid);
+  if (src.added) setOv(it.date, iid, { added: null, time: null, dur: null });
+  else setOv(it.date, iid, { removed: true, time: null, dur: null });
+  setLog(it.date, iid, null);
+  let nid = iid;
+  if (sl && isScheduled(r, toDate)) setOv(toDate, iid, { removed: null, time: toTime === sl.time ? null : toTime, dur: src.dur || null });
+  else nid = addRoutineInstance(r.id, toDate, toTime, src.dur || (sl ? sl.dur : null));
+  if (st) setLog(toDate, nid, st);
+  return nid;
+}
+/* Her çağrı yeni bir gün-özel instance ekler; aynı rutin bir güne istenildiği kadar bırakılabilir */
+function addRoutineInstance(rid, ds, time, dur) {
+  const r = routine(rid); if (!r) return null;
+  const iid = rid + '.x' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
+  setOv(ds, iid, { added: true, time: time || null, dur: dur || null });
+  return iid;
+}
+function removeFromDay(it) {
+  if (it.kind === 'task') { S.tasks = S.tasks.filter(t => t.id !== it.id); return; }
+  const o = ov(it.date, it.id);
+  if (o.added) setOv(it.date, it.id, { added: null, time: null, dur: null });
+  else setOv(it.date, it.id, { removed: true, time: null, dur: null });
+  setLog(it.date, it.id, null);
+}
+function setItemDur(it, dur) {
+  if (it.kind === 'task') { task(it.id).dur = dur; return; }
+  const sl = slotOf(it.id);
+  setOv(it.date, it.id, { dur: (sl && dur === sl.dur) ? null : dur });
+}
+
+/* ---------- rendering shell ---------- */
+const VIEWS = {};
+let weekScroll = null;
+function render() {
+  $$('.rail-btn').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  const v = VIEWS[view] || VIEWS.today;
+  const el = $('#view');
+  if (view === 'week') { const sc = $('.wk-scroll'); if (sc) weekScroll = sc.scrollTop; }
+  el.className = 'view' + (v.fill ? ' fill' : '');
+  el.innerHTML = v.html();
+  const hd = v.head();
+  $('#hTitle').textContent = hd.t;
+  $('#hSub').textContent = hd.s || '';
+  $('#hNav').style.display = hd.nav ? '' : 'none';
+  v.after && v.after();
+  paintPomo();
+  applyTheme();
+}
+function go(v) { view = v; S.ui.view = v; persist(); render(); $('#view').scrollTop = 0; }
+function navStep(dir) {
+  if (dir === 0) { cur = new Date(); }
+  else if (view === 'today') cur = addDays(cur, dir);
+  else if (view === 'week' || view === 'plan') cur = addDays(cur, 7 * dir);
+  else if (view === 'month') cur = new Date(cur.getFullYear(), cur.getMonth() + dir, 1);
+  else if (view === 'year') cur = new Date(cur.getFullYear() + dir, 0, 1);
+  render();
+}
+const dateTitle = d => `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}, ${DOW_L[isoDow(d) - 1]}`;
+
+/* ---------- today ---------- */
+VIEWS.today = {
+  head() {
+    const ds = ymd(cur), t = todayStr();
+    const rel = ds === t ? 'Bugün' : ds === ymd(addDays(new Date(), -1)) ? 'Dün' : ds === ymd(addDays(new Date(), 1)) ? 'Yarın' : DOW_L[isoDow(cur) - 1];
+    return { t: rel, s: dateTitle(cur), nav: true };
+  },
+  html() {
+    const ds = ymd(cur);
+    const items = itemsFor(ds);
+    const rs = items.filter(i => i.kind === 'routine');
+    const done = rs.filter(i => i.status === 'done').length;
+    const pct = rs.length ? Math.round(done / rs.length * 100) : 0;
+    const timed = items.filter(i => i.time), untimed = items.filter(i => !i.time);
+    const isToday = ds === todayStr();
+    const nm = nowMin();
+    const next = isToday ? timed.find(i => toMin(i.time) >= nm && !i.status) : null;
+    const nowItem = isToday ? timed.find(i => toMin(i.time) <= nm && toMin(i.time) + i.dur > nm) : null;
+    const notice = S.meta.seeded ? `<div class="notice"><p><b>Rutinlerin örnek olarak yüklendi.</b> Eski MeCal'deki Export dosyasını içe aktarırsan saatler ve günler geçmiş planlarından otomatik çıkarılır.</p>
+      <button class="btn sm pri" data-act="importFile">Eski yedeği içe aktar</button><button class="btn sm ghost" data-act="dismissSeed">Anladım</button></div>` : '';
+    return `${notice}
+    <section class="ribbon-card">
+      <div class="rb-head">
+        <div class="rb-now" id="rbNow">${isToday ? fromMin(nm) : DOW[isoDow(cur) - 1]}</div>
+        <div class="rb-next">${nowItem ? `Şu an: <b>${esc(nowItem.title)}</b><br>` : ''}${next ? `Sıradaki: <b>${esc(next.title)}</b>, ${next.time}` : isToday ? 'Bugün için planlanmış başka saatli iş yok.' : `${timed.length} saatli, ${untimed.length} saatsiz iş`}</div>
+        <div class="rb-score"><strong>${done}/${rs.length}</strong><span>rutin tamamlandı, %${pct}</span></div>
+      </div>
+      ${ribbon(ds, timed)}
+    </section>
+    <div class="today-grid">
+      <section class="panel">
+        <div class="panel-h"><h2>Akış</h2><span class="grow"></span>
+          <button class="btn sm ghost" data-act="dayIcs" data-date="${ds}">${ICON.down}.ics</button>
+          <button class="btn sm" data-act="newTask" data-scope="day">Görev ekle</button></div>
+        <div class="progress"><i style="width:${pct}%"></i></div>
+        ${items.length ? '' : `<div class="empty"><b>Bu gün boş</b>Rutinler sayfasından gün seç ya da görev ekle.</div>`}
+        <ol class="ag">${timed.map(i => agRow(i, nowItem)).join('')}</ol>
+        ${untimed.length ? `<h3 class="sub-h">Saatsiz</h3><ol class="ag">${untimed.map(i => agRow(i)).join('')}</ol>` : ''}
+      </section>
+      <div class="side">
+        ${focusPanel(items)}
+        <section class="panel">${horizonBlock('week', true)}</section>
+      </div>
+    </div>`;
+  },
+  after() { }
+};
+function ribbon(ds, timed) {
+  const st = S.settings.dayStart * 60, en = S.settings.dayEnd * 60, span = en - st;
+  const segs = timed.map(i => ({ i, s: clamp(toMin(i.time), st, en), e: clamp(toMin(i.time) + i.dur, st, en) })).sort((a, b) => a.s - b.s);
+  const lanes = [];
+  segs.forEach(x => { let l = lanes.findIndex(e => e <= x.s); if (l < 0) { l = lanes.length; lanes.push(0); } lanes[l] = Math.max(x.e, x.s + 10); x.l = l; });
+  const hours = S.settings.dayEnd - S.settings.dayStart;
+  let ticks = '';
+  for (let h = S.settings.dayStart; h <= S.settings.dayEnd; h++) ticks += `<span style="left:${(h * 60 - st) / span * 100}%">${pad(h % 24)}</span>`;
+  const isToday = ds === todayStr();
+  const nm = nowMin();
+  const needle = isToday && nm >= st && nm <= en ? `<div class="rb-past" id="rbPast" style="width:${(nm - st) / span * 100}%"></div><div class="rb-needle" id="rbNeedle" style="left:${(nm - st) / span * 100}%"></div>` : '';
+  return `<div class="ribbon" style="--lanes:${Math.max(1, lanes.length)};--hours:${hours}">
+    <div class="rb-track">${segs.map(x => `<button class="seg ${x.i.status || ''}" data-act="openItem" data-k="${itemKey(x.i)}"
+      style="left:${(x.s - st) / span * 100}%;width:${(x.e - x.s) / span * 100}%;top:calc(${x.l} * var(--lane-h));--c:${cat(x.i.catId).color}"
+      title="${x.i.time} ${esc(x.i.title)}"><span>${esc(x.i.title)}</span></button>`).join('')}</div>
+    ${needle}<div class="rb-axis">${ticks}</div></div>`;
+}
+function agRow(i, nowItem) {
+  const c = cat(i.catId).color;
+  const cls = ['ag-row', i.status === 'done' ? 'is-done' : '', i.status === 'skip' ? 'is-skip' : '', nowItem && nowItem === i ? 'is-now' : ''].join(' ');
+  const k = itemKey(i);
+  return `<li class="${cls}" style="--c:${c}">
+    <button class="chk" data-act="done" data-k="${k}" aria-label="${esc(i.title)} tamamlandı">${i.status === 'skip' ? ICON.minus : ICON.check}</button>
+    <span class="ag-time"><b>${i.time || '—'}</b><small>${i.dur} dk</small></span>
+    <span class="ag-title"><span>${esc(i.title)}</span>${i.note ? `<em>${esc(i.note)}</em>` : i.kind === 'task' ? '<em>Tek seferlik görev</em>' : i.moved ? '<em>Bu gün için uyarlandı</em>' : ''}</span>
+    <span class="ag-act">
+      <button class="icon-btn sm" data-act="focusOn" data-k="${k}" title="Odak sayacını buna bağla">${ICON.play}</button>
+      ${i.kind === 'routine' ? `<button class="icon-btn sm" data-act="skip" data-k="${k}" title="Bugün atla">${ICON.skip}</button>` : ''}
+      <button class="icon-btn sm" data-act="openItem" data-k="${k}" title="Ayrıntılar">${ICON.more}</button>
+    </span></li>`;
+}
+
+/* ---------- pomodoro ---------- */
+const pomoDur = m => (m === 'focus' ? S.settings.focus : m === 'short' ? S.settings.short : S.settings.long) * 60000;
+function pomoLeft() { const p = S.pomo; if (p.endsAt) return Math.max(0, p.endsAt - Date.now()); if (p.left != null) return p.left; return pomoDur(p.mode); }
+const pomoRunning = () => !!S.pomo.endsAt;
+function focusPanel(items) {
+  const p = S.pomo, t = todayStr();
+  const todays = sessionsIn(t, t);
+  const mins = todays.reduce((a, s) => a + s.mins, 0);
+  const opts = (items || itemsFor(t)).filter(i => i.status !== 'done');
+  const linkK = p.link ? p.link.k : '';
+  const hasLink = p.link && !opts.some(i => itemKey(i) === linkK);
+  const every = S.settings.every;
+  const inRound = p.round % every;
+  const C = 2 * Math.PI * 88;
+  return `<section class="focus m-${p.mode}" id="focusPanel">
+    <div class="panel-h"><h2>Odak</h2><span class="grow"></span><span class="pill">${S.settings.focus}/${S.settings.short}/${S.settings.long}</span></div>
+    <div class="seg-switch" role="tablist">
+      ${[['focus', 'Odak'], ['short', 'Kısa mola'], ['long', 'Uzun mola']].map(([m, l]) => `<button role="tab" class="${p.mode === m ? 'on' : ''}" data-act="pomoMode" data-mode="${m}">${l}</button>`).join('')}
+    </div>
+    <div class="ring-wrap"><svg viewBox="0 0 196 196"><circle class="ring-bg" cx="98" cy="98" r="88" fill="none" stroke-width="10"/>
+      <circle class="ring-fg" id="pomoRing" cx="98" cy="98" r="88" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+      <div class="ring-txt"><b id="pomoTime">25:00</b><span id="pomoLabel">${p.mode === 'focus' ? 'odak' : 'mola'}</span></div></div>
+    <div class="rounds">${Array.from({ length: every }, (_, i) => `<i class="${i < inRound ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="focus-ctl">
+      <button class="btn tomato" id="pomoBtn" data-act="pomoToggle">${pomoRunning() ? 'Duraklat' : 'Başlat'}</button>
+      <button class="btn" data-act="pomoFinish" title="Seansı şimdi bitir ve kaydet">Bitir</button>
+      <button class="icon-btn" data-act="pomoReset" title="Sıfırla" aria-label="Sıfırla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.6h3.6"/></svg></button>
+    </div>
+    <label class="f">Bağlı iş
+      <select class="sel" data-chg="pomoLink">
+        <option value="">Serbest çalışma</option>
+        ${hasLink ? `<option value="${esc(linkK)}" selected>${esc(p.link.title)}</option>` : ''}
+        ${opts.map(i => `<option value="${itemKey(i)}" ${itemKey(i) === linkK ? 'selected' : ''}>${i.time ? i.time + '  ' : ''}${esc(i.title)}</option>`).join('')}
+      </select></label>
+    <div class="focus-stats"><div><b>${fmtH(mins)}</b><span>bugün odak</span></div><div><b>${todays.length}</b><span>seans</span></div></div>
+  </section>`;
+}
+function paintPomo() {
+  const left = pomoLeft(), total = pomoDur(S.pomo.mode);
+  const mm = Math.floor(left / 60000), ss = Math.floor(left / 1000) % 60;
+  const txt = `${pad(mm)}:${pad(ss)}`;
+  const t = $('#pomoTime'); if (t) t.textContent = txt;
+  const ring = $('#pomoRing');
+  if (ring) { const C = 2 * Math.PI * 88; ring.style.strokeDashoffset = String(C * (1 - left / total)); }
+  const b = $('#pomoBtn'); if (b) b.textContent = pomoRunning() ? 'Duraklat' : (S.pomo.left != null ? 'Sürdür' : 'Başlat');
+  const rp = $('#railPomo');
+  const active = pomoRunning() || S.pomo.left != null;
+  rp.classList.toggle('on', active);
+  rp.textContent = txt;
+  document.title = active ? `${txt} ${S.pomo.mode === 'focus' ? 'Odak' : 'Mola'} | MeCal` : 'MeCal';
+}
+function pomoStart() {
+  const p = S.pomo;
+  const left = pomoLeft();
+  p.endsAt = Date.now() + left; p.left = null;
+  if (!p.startedAt) p.startedAt = Date.now();
+  askNotify(); persist(); paintPomo();
+}
+function pomoPause() { const p = S.pomo; p.left = pomoLeft(); p.endsAt = null; persist(); paintPomo(); }
+function pomoReset() { Object.assign(S.pomo, { endsAt: null, left: null, startedAt: null }); persist(); render(); }
+function pomoFinish(natural) {
+  const p = S.pomo;
+  const wasFocus = p.mode === 'focus';
+  if (wasFocus) {
+    const elapsed = pomoDur('focus') - pomoLeft();
+    const mins = Math.round(elapsed / 60000);
+    if (mins >= 1) {
+      const start = p.startedAt ? new Date(p.startedAt) : new Date(Date.now() - elapsed);
+      const l = p.link;
+      S.sessions.push({ id: uid('s'), date: ymd(start), start: start.toISOString(), mins, kind: l ? l.kind : 'free',
+        refId: l ? l.id : null, title: l ? l.title : 'Serbest çalışma', catId: l ? l.catId : null });
+      p.round++;
+      if (l && l.kind === 'routine') {
+        const it = itemFromKey(l.k);
+        if (it && it.status !== 'done') toast(`${mins} dk kaydedildi. "${l.title}" tamamlandı mı?`, 'İşaretle', () => { const x = itemFromKey(l.k); if (x && x.status !== 'done') { toggleDone(x); commit(); } });
+        else toast(`${mins} dk odak kaydedildi.`);
+      } else toast(`${mins} dk odak kaydedildi.`);
+    }
+  }
+  const next = wasFocus ? (p.round > 0 && p.round % S.settings.every === 0 ? 'long' : 'short') : 'focus';
+  Object.assign(p, { mode: next, endsAt: null, left: null, startedAt: null });
+  if (natural) {
+    beep(); notify(wasFocus ? 'Odak bitti' : 'Mola bitti', wasFocus ? 'Kısa bir mola ver.' : 'Yeni odak seansına hazır.');
+    if (S.settings.autoBreak && next !== 'focus') { persist(); render(); pomoStart(); return; }
+  }
+  persist(); render();
+}
+function askNotify() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); }
+function notify(title, body) { try { if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body }); } catch (e) {} }
+function beep() {
+  if (!S.settings.sound) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .22, .44].forEach((t, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = i === 2 ? 880 : 660; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+      o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
+    });
+    setTimeout(() => { try { ctx.close(); } catch (e) {} }, 900);
+  } catch (e) {}
+}
+
+/* ---------- week ---------- */
+const PPM = 1.4;
+let drag = null;
+VIEWS.week = {
+  fill: true,
+  head() { const m = mondayOf(cur); return { t: `Hafta ${isoWeek(cur).w}`, s: fmtRange(ymd(m), ymd(addDays(m, 6))), nav: true }; },
+  html() {
+    const m = mondayOf(cur), t = todayStr();
+    const st = S.settings.dayStart, en = S.settings.dayEnd;
+    const H = (en - st) * 60 * PPM;
+    const days = Array.from({ length: 7 }, (_, i) => ymd(addDays(m, i)));
+    const heads = days.map((ds, i) => {
+      const s = dayStats(ds);
+      const pct = s.total ? s.done / s.total * 100 : 0;
+      return `<div class="wk-dh ${ds === t ? 'today' : ''}">
+        <div class="dn">${DOW[i]}</div><div class="dd"><b>${parseYmd(ds).getDate()}</b></div>
+        <div class="mini" title="${s.done}/${s.total} rutin"><i style="width:${pct}%"></i></div>
+        <div class="dh-act">
+          <button class="icon-btn sm" data-act="dayOutlook" data-date="${ds}" title="Bu günü Outlook'a aktar">${ICON.out}</button>
+          <button class="icon-btn sm" data-act="openDay" data-date="${ds}" title="Günü aç">${ICON.more}</button>
+        </div></div>`;
+    }).join('');
+    const un = days.map(ds => {
+      const items = itemsFor(ds).filter(i => !i.time);
+      const rs = items.filter(i => i.kind === 'routine');
+      const tk = items.filter(i => i.kind === 'task');
+      const d = rs.filter(i => i.status === 'done').length;
+      return `<div class="wk-uc">${rs.length ? `<button class="utag" data-act="openDay" data-date="${ds}">${rs.length} saatsiz rutin, ${d} bitti</button>` : ''}
+        ${tk.map(i => `<button class="utag" data-act="openItem" data-k="${itemKey(i)}" style="box-shadow:inset 3px 0 0 ${cat(i.catId).color}">${esc(i.title)}</button>`).join('')}</div>`;
+    }).join('');
+    let gut = '';
+    for (let h = st + 1; h < en; h++) gut += `<span style="top:${(h - st) * 60 * PPM}px">${pad(h)}:00</span>`;
+    const cols = days.map(ds => {
+      const items = itemsFor(ds).filter(i => i.time).map(i => ({ i, s: clamp(toMin(i.time), st * 60, en * 60 - 15), e: 0 }));
+      items.forEach(x => x.e = Math.min(en * 60, x.s + Math.max(x.i.dur, 15)));
+      layoutCols(items);
+      const blocks = items.map(x => {
+        const c = cat(x.i.catId).color;
+        const top = (x.s - st * 60) * PPM, hgt = Math.max(18, (x.e - x.s) * PPM - 2);
+        return `<div class="blk ${x.i.status || ''} ${x.i.kind === 'task' ? 'task' : ''}" draggable="true" data-k="${itemKey(x.i)}" tabindex="0"
+          style="top:${top}px;height:${hgt}px;left:calc(${x.col} * (100% - 4px) / ${x.n} + 2px);width:calc((100% - 4px) / ${x.n} - 2px);--c:${c}"
+          title="${x.i.time} ${esc(x.i.title)} (${x.i.dur} dk)"><span class="bt">${x.i.time}</span><span class="bn">${esc(x.i.title)}</span><i class="rz"></i></div>`;
+      }).join('');
+      const nm = nowMin();
+      const now = ds === t && nm >= st * 60 && nm <= en * 60 ? `<div class="now-line" id="wkNow" style="top:${(nm - st * 60) * PPM}px"></div>` : '';
+      return `<div class="wk-col ${ds === t ? 'today' : ''}" data-date="${ds}" style="height:${H}px;--hp:${60 * PPM}px">${blocks}${now}<div class="drop-ind"></div></div>`;
+    }).join('');
+    const pal = S.routines.filter(r => !isPausedNow(r)).map(r => `<div class="chip" draggable="true" data-rid="${r.id}" title="Sürükleyip bir güne bırak; istediğin kadar tekrar bırakabilirsin"><i class="dot" style="--c:${cat(r.catId).color}"></i><span>${esc(r.title)}</span></div>`).join('');
+    return `<div class="week-shell" id="weekShell" style="--palw:${clamp(Number(S.ui.palW) || 220, 150, 460)}px">
+      <aside class="palette"><h3>Rutinler</h3><p>Bir güne sürükle: yalnızca o gün için eklenir. Aynı rutini aynı güne birden çok kez bırakabilirsin. Kalıcı günler ve saatler Rutinler sayfasından.</p>${pal}</aside>
+      <div class="wk-split" id="wkSplit" role="separator" aria-orientation="vertical" title="Sütun genişliğini sürükleyerek ayarla"></div>
+      <div class="wk">
+        <div class="wk-row wk-head"><div></div>${heads}</div>
+        <div class="wk-row wk-un"><div></div>${un}</div>
+        <div class="wk-scroll"><div class="wk-row wk-body"><div class="wk-gut" style="height:${H}px">${gut}</div>${cols}</div></div>
+      </div></div>`;
+  },
+  after() {
+    const sc = $('.wk-scroll');
+    if (weekScroll != null) sc.scrollTop = weekScroll;
+    else { const nm = nowMin(); const target = Math.max(0, ((ymd(mondayOf(cur)) <= todayStr() && todayStr() <= ymd(addDays(mondayOf(cur), 6)) ? nm - 90 : 6 * 60) - S.settings.dayStart * 60) * PPM); sc.scrollTop = target; }
+    if (matchMedia('(max-width:820px)').matches) { const td = $('.wk-dh.today'), wk = $('.wk'); if (td && wk) wk.scrollLeft = Math.max(0, td.offsetLeft - 44); }
+    bindWeekDnD();
+    const sp = $('#wkSplit'), shell = $('#weekShell');
+    if (sp && shell) sp.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const x0 = e.clientX, w0 = clamp(Number(S.ui.palW) || 220, 150, 460);
+      sp.classList.add('on'); sp.setPointerCapture(e.pointerId);
+      const mv = ev => { const w = clamp(w0 + ev.clientX - x0, 150, 460); shell.style.setProperty('--palw', w + 'px'); S.ui.palW = w; };
+      const up = () => { sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up); sp.classList.remove('on'); persist(); };
+      sp.addEventListener('pointermove', mv); sp.addEventListener('pointerup', up);
+    });
+  }
+};
+function layoutCols(items) {
+  items.sort((a, b) => a.s - b.s || b.e - a.e);
+  let cluster = [], end = -1;
+  const flush = () => {
+    const cols = [];
+    cluster.forEach(x => { let c = cols.findIndex(e => e <= x.s); if (c < 0) { c = cols.length; cols.push(0); } cols[c] = x.e; x.col = c; });
+    cluster.forEach(x => x.n = cols.length);
+    cluster = [];
+  };
+  items.forEach(x => { if (cluster.length && x.s >= end) { flush(); end = -1; } cluster.push(x); end = Math.max(end, x.e); });
+  if (cluster.length) flush();
+}
+function bindWeekDnD() {
+  $$('.chip[data-rid]').forEach(ch => ch.addEventListener('dragstart', e => { drag = { type: 'palette', rid: ch.dataset.rid, grab: 0 }; e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', ch.dataset.rid); }));
+  $$('.blk').forEach(b => {
+    b.addEventListener('dragstart', e => {
+      if (b.dataset.resizing) { e.preventDefault(); return; }
+      drag = { type: 'item', k: b.dataset.k, grab: e.offsetY };
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', b.dataset.k);
+      requestAnimationFrame(() => b.classList.add('dragging'));
+    });
+    b.addEventListener('dragend', () => { b.classList.remove('dragging'); $$('.drop-ind').forEach(d => d.style.display = 'none'); });
+    b.addEventListener('click', e => { if (!e.target.classList.contains('rz')) openItem(b.dataset.k); });
+    b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openItem(b.dataset.k); } });
+    const rz = b.querySelector('.rz');
+    rz.addEventListener('pointerdown', e => {
+      e.stopPropagation(); e.preventDefault();
+      b.dataset.resizing = '1'; b.draggable = false;
+      const y0 = e.clientY, h0 = b.offsetHeight;
+      rz.setPointerCapture(e.pointerId);
+      const mv = ev => { b.style.height = Math.max(18, h0 + ev.clientY - y0) + 'px'; };
+      const up = () => {
+        rz.removeEventListener('pointermove', mv); rz.removeEventListener('pointerup', up);
+        const mins = Math.max(15, Math.round(b.offsetHeight / PPM / 15) * 15);
+        const it = itemFromKey(b.dataset.k);
+        if (it) { setItemDur(it, mins); commit(); }
+      };
+      rz.addEventListener('pointermove', mv); rz.addEventListener('pointerup', up);
+    });
+  });
+  $$('.wk-col').forEach(col => {
+    const ind = col.querySelector('.drop-ind');
+    const minAt = e => {
+      const r = col.getBoundingClientRect();
+      const y = e.clientY - r.top - (drag ? drag.grab : 0);
+      return clamp(Math.round((S.settings.dayStart * 60 + y / PPM) / 15) * 15, S.settings.dayStart * 60, S.settings.dayEnd * 60 - 15);
+    };
+    col.addEventListener('dragover', e => {
+      if (!drag) return; e.preventDefault();
+      const m = minAt(e);
+      ind.style.display = 'block'; ind.style.top = (m - S.settings.dayStart * 60) * PPM + 'px'; ind.dataset.t = fromMin(m);
+      col.classList.add('over');
+    });
+    col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) { ind.style.display = 'none'; col.classList.remove('over'); } });
+    col.addEventListener('drop', e => {
+      e.preventDefault(); col.classList.remove('over'); ind.style.display = 'none';
+      if (!drag) return;
+      const time = fromMin(minAt(e)), ds = col.dataset.date;
+      if (drag.type === 'palette') { addRoutineInstance(drag.rid, ds, time, null); toast(`${routine(drag.rid).title}: ${fmtDate(ds, false)} ${time} (yalnızca bu gün)`); }
+      else { const it = itemFromKey(drag.k); if (it) moveItem(it, ds, time); }
+      drag = null; commit();
+    });
+  });
+}
+
+/* ---------- month ---------- */
+VIEWS.month = {
+  head() { return { t: `${MON[cur.getMonth()]} ${cur.getFullYear()}`, s: 'Günlere tıkla, ayrıntıya in', nav: true }; },
+  html() {
+    const y = cur.getFullYear(), mo = cur.getMonth();
+    const first = new Date(y, mo, 1);
+    const start = addDays(first, 1 - isoDow(first));
+    const last = new Date(y, mo + 1, 0);
+    const cells = Math.ceil((isoDow(first) - 1 + last.getDate()) / 7) * 7;
+    const t = todayStr();
+    let html = DOW.map(d => `<div class="mh">${d}</div>`).join('');
+    for (let i = 0; i < cells; i++) {
+      const d = addDays(start, i), ds = ymd(d);
+      const s = dayStats(ds);
+      const past = ds <= t;
+      const rate = s.total ? s.done / s.total : 0;
+      const heat = past && s.total ? Math.round(rate * 38) : 0;
+      const tk = tasksFor(ds).sort(sortItems);
+      html += `<button class="mc ${d.getMonth() !== mo ? 'out' : ''} ${ds === t ? 'today' : ''}" style="--heat:${heat}%" data-act="openDay" data-date="${ds}">
+        <span class="md"><b>${d.getDate()}</b>${s.total ? `<span class="mr">${past ? `${s.done}/${s.total}` : `${s.total} rutin`}</span>` : ''}</span>
+        ${tk.slice(0, 3).map(x => `<span class="mp ${x.status === 'done' ? 'done' : ''}" style="--c:${cat(x.catId).color}">${x.time ? x.time + ' ' : ''}${esc(x.title)}</span>`).join('')}
+        ${tk.length > 3 ? `<span class="mm">+${tk.length - 3} görev</span>` : ''}
+      </button>`;
+    }
+    const ms = rangeStats(ymd(first), ymd(last));
+    return `<div class="month-shell"><div>
+      <div class="mgrid">${html}</div>
+      <div class="legend">Rutin tamamlama: <i style="background:var(--surface)"></i>%0 <i style="background:color-mix(in srgb,var(--turq) 19%,var(--surface))"></i>%50 <i style="background:color-mix(in srgb,var(--turq) 38%,var(--surface))"></i>%100
+        <span style="margin-left:auto">Ay geneli: <b>${ms.rate == null ? '—' : '%' + Math.round(ms.rate * 100)}</b> (${ms.done}/${ms.total})</span></div>
+    </div>
+    <aside class="side"><section class="panel">${horizonBlock('month')}</section></aside></div>`;
+  }
+};
+
+/* ---------- year ---------- */
+VIEWS.year = {
+  head() { return { t: String(cur.getFullYear()), s: 'Yıl boyunca rutin istikrarı', nav: true }; },
+  html() {
+    const y = cur.getFullYear(), t = todayStr();
+    let months = '';
+    for (let mo = 0; mo < 12; mo++) {
+      const first = new Date(y, mo, 1), last = new Date(y, mo + 1, 0);
+      const ms = rangeStats(ymd(first), ymd(last));
+      let cells = '';
+      for (let b = 1; b < isoDow(first); b++) cells += '<i class="yd blank"></i>';
+      for (let d = 1; d <= last.getDate(); d++) {
+        const ds = ymd(new Date(y, mo, d));
+        let cls = 'yd';
+        if (ds > t) cls += ' fut';
+        else { const s = dayStats(ds); if (s.total) { const r = s.done / s.total; cls += r >= .9 ? ' l4' : r >= .65 ? ' l3' : r >= .35 ? ' l2' : r > 0 ? ' l1' : ''; } }
+        if (ds === t) cls += ' tdy';
+        cells += `<i class="${cls}" title="${fmtDate(ds, false)}"></i>`;
+      }
+      months += `<button class="ym" data-act="gotoMonth" data-m="${mo}"><span class="ym-h">${MON[mo]}<small>${ms.rate == null ? '' : '%' + Math.round(ms.rate * 100)}</small></span><span class="ydays">${cells}</span></button>`;
+    }
+    const ys = rangeStats(`${y}-01-01`, `${y}-12-31`);
+    const ym = sessionsIn(`${y}-01-01`, `${y}-12-31`).reduce((a, s) => a + s.mins, 0);
+    return `<div class="year-shell"><div>
+      <div class="kpis"><div class="kpi"><b>${ys.rate == null ? '—' : '%' + Math.round(ys.rate * 100)}</b><span>yıllık rutin tamamlama</span></div>
+        <div class="kpi"><b>${fmtH(ym)}</b><span>toplam odak</span></div>
+        <div class="kpi"><b>${tasksDoneIn(`${y}-01-01`, `${y}-12-31`).length}</b><span>tamamlanan görev</span></div></div>
+      <div class="ygrid">${months}</div>
+      <div class="legend">Az <i class="yd" style="background:var(--sunk)"></i><i class="yd l1"></i><i class="yd l2"></i><i class="yd l3"></i><i class="yd l4"></i> Çok</div>
+    </div><aside class="side"><section class="panel">${horizonBlock('year')}</section></aside></div>`;
+  }
+};
+
+/* ---------- routines ---------- */
+VIEWS.routines = {
+  head() { return { t: 'Rutinler', s: `${S.routines.length} rutin. Günleri ve saatleri bir kez tanımla; bir rutine günde birden çok saat ekleyebilirsin (ör. 5 × 25 dk).`, nav: false }; },
+  html() {
+    const t = todayStr(), from = ymd(addDays(new Date(), -29));
+    const rows = S.routines.map((r, idx) => {
+      const st = routineStats(from, t, r.id);
+      const rate = st && st.plan ? Math.round(st.done / st.plan * 100) : null;
+      const paused = isPausedNow(r);
+      return `<div class="rt-row ${paused ? 'paused' : ''}" draggable="true" data-rid="${r.id}">
+        <span class="handle" title="Sırala">${ICON.grip}</span>
+        <span class="rt-name"><i class="dot" style="--c:${cat(r.catId).color}"></i><button data-act="editRoutine" data-rid="${r.id}" title="Düzenle">${esc(r.title)}</button></span>
+        <select class="sel sm" data-chg="rtCat" data-rid="${r.id}">${S.categories.map(c => `<option value="${c.id}" ${c.id === r.catId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+        <span class="days">${DOW.map((d, i) => `<button class="${r.days.includes(i + 1) ? 'on' : ''}" data-act="rtDay" data-rid="${r.id}" data-d="${i + 1}" aria-pressed="${r.days.includes(i + 1)}">${d.slice(0, 2)}</button>`).join('')}</span>
+        ${r.slots.length === 1
+          ? `<input class="inp sm" type="time" step="300" value="${r.slots[0].time || ''}" data-chg="rtTime" data-rid="${r.id}" aria-label="Saat">`
+          : `<button class="btn sm" data-act="editRoutine" data-rid="${r.id}" title="${r.slots.map(s => s.time || 'saatsiz').join(', ')}">${r.slots.length} kez/gün</button>`}
+        ${r.slots.length === 1
+          ? `<select class="sel sm" data-chg="rtDur" data-rid="${r.id}">${DURS.map(d => `<option value="${d}" ${d === r.slots[0].dur ? 'selected' : ''}>${d} dk</option>`).join('')}</select>`
+          : `<span class="muted" style="font-size:12px">${fmtH(r.slots.reduce((a, s) => a + s.dur, 0))}/gün</span>`}
+        <span class="rate">${rate == null ? '<span class="muted">—</span>' : `<span>%${rate}</span><span class="gbar"><i style="width:${rate}%;--c:var(--turq)"></i></span>`}</span>
+        <span class="streak">${streak(r.id)} <small>gün</small></span>
+        <span style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="btn sm ghost" data-act="rtPause" data-rid="${r.id}">${paused ? 'Sürdür' : 'Durdur'}</button></span>
+      </div>`;
+    }).join('');
+    return `${S.meta.seeded ? `<div class="notice"><p>Saatsiz rutinler Bugün ekranında "Saatsiz" listesinde görünür. Saat verdiğinde zaman çizelgesine ve Outlook serisine girer.</p><button class="btn sm pri" data-act="importFile">Eski yedeği içe aktar</button></div>` : ''}
+    <div class="panel-h"><h2>Rutin listesi</h2><span class="grow"></span><button class="btn pri" data-act="editRoutine">Rutin ekle</button></div>
+    <div class="rt-table">
+      <div class="rt-row hd"><span></span><span>Rutin</span><span>Kategori</span><span>Günler</span><span>Saat</span><span>Süre</span><span>Son 30 gün</span><span>Seri</span><span></span></div>
+      ${rows || '<div class="empty"><b>Henüz rutin yok</b>Sağ üstten ekle.</div>'}
+    </div>
+    <section class="panel" style="margin-top:18px">
+      <div class="panel-h"><h2>Kategoriler</h2><span class="muted">Renkler Outlook dışındaki tüm görünümlerde kullanılır.</span><span class="grow"></span><button class="btn sm" data-act="addCat">Kategori ekle</button></div>
+      <div class="cat-list">${S.categories.map(c => `<span class="cat-ed"><button class="sw" style="--c:${c.color}" data-act="catColor" data-cid="${c.id}" title="Renk değiştir"></button>
+        <input class="inp" value="${esc(c.name)}" data-chg="catName" data-cid="${c.id}" aria-label="Kategori adı">
+        <button class="icon-btn sm" data-act="delCat" data-cid="${c.id}" aria-label="Sil">${ICON.x}</button></span>`).join('')}</div>
+    </section>`;
+  },
+  after() {
+    let from = null;
+    $$('.rt-row[data-rid]').forEach(row => {
+      row.addEventListener('dragstart', e => { from = row.dataset.rid; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', from); });
+      row.addEventListener('dragover', e => { if (!from) return; e.preventDefault(); row.classList.add('drop'); });
+      row.addEventListener('dragleave', () => row.classList.remove('drop'));
+      row.addEventListener('drop', e => {
+        e.preventDefault(); row.classList.remove('drop');
+        if (!from || from === row.dataset.rid) return;
+        const a = S.routines.findIndex(r => r.id === from);
+        const [it] = S.routines.splice(a, 1);
+        const b = S.routines.findIndex(r => r.id === row.dataset.rid);
+        S.routines.splice(b, 0, it); from = null; commit();
+      });
+    });
+    $$('.rt-row input, .rt-row select').forEach(el => { el.addEventListener('mousedown', () => el.closest('.rt-row').draggable = false); el.addEventListener('blur', () => el.closest('.rt-row').draggable = true); });
+  }
+};
+
+/* ---------- plan: horizons & goals ---------- */
+const H_NAME = { week: 'Bu hafta', month: 'Bu ay', year: 'Bu yıl' };
+function goalsFor(h, pk) { return S.goals.filter(g => g.horizon === h && (g.recurring || g.period === pk)); }
+/* Dönem anahtarından tarih aralığı: '2026-W38' → [pzt, paz] */
+function periodFromKey(h, pk) {
+  if (h === 'week') { const [y, w] = String(pk).split('-W').map(Number); const mon = addDays(mondayOf(new Date(y, 0, 4)), (w - 1) * 7); return [ymd(mon), ymd(addDays(mon, 6))]; }
+  if (h === 'month') { const [y, m] = String(pk).split('-').map(Number); return [ymd(new Date(y, m - 1, 1)), ymd(new Date(y, m, 0))]; }
+  return [`${pk}-01-01`, `${pk}-12-31`];
+}
+/* Verilen tarih aralığıyla kesişen hedefler (tekrarlılar aralığın son dönemine oturur) */
+function goalsInRange(from, to) {
+  return S.goals.map(g => {
+    const pk = g.recurring ? periodKey(g.horizon, parseYmd(to)) : g.period;
+    if (!pk) return null;
+    const [a, b] = periodFromKey(g.horizon, pk);
+    if (b < from || a > to) return null;
+    return { g, pk, a, b, p: goalProgress(g, g.horizon, pk, a, b) };
+  }).filter(Boolean);
+}
+function goalProgress(g, h, pk, from, to) {
+  if (g.metric === 'focus') {
+    const m = sessionsIn(from, to).filter(s => !g.catId || s.catId === g.catId).reduce((a, s) => a + s.mins, 0);
+    const tgt = (g.target || 0) * 60;
+    return { pct: tgt ? m / tgt : 0, label: `${fmtH(m)} / ${g.target} sa` };
+  }
+  if (g.metric === 'routine') {
+    const st = g.routineId ? routineStats(from, to, g.routineId) : rangeStats(from, to);
+    const r = st ? (g.routineId ? (st.plan ? st.done / st.plan : null) : st.rate) : null;
+    return { pct: r == null ? 0 : r / ((g.target || 100) / 100), label: `${r == null ? '—' : '%' + Math.round(r * 100)} / %${g.target}` };
+  }
+  if (g.metric === 'tasks') {
+    const n = tasksDoneIn(from, to).length;
+    return { pct: g.target ? n / g.target : 0, label: `${n} / ${g.target} görev` };
+  }
+  const n = g.counts[pk] || 0;
+  return { pct: g.target ? n / g.target : 0, label: `${n} / ${g.target}`, counter: true };
+}
+function horizonBlock(h, compact) {
+  const pk = periodKey(h, cur);
+  const [from, to] = periodRange(h, cur);
+  const lb = periodLabel(h, cur);
+  const goals = goalsFor(h, pk);
+  const tasks = S.tasks.filter(t => t.scope === h && t.period === pk).sort((a, b) => a.done - b.done);
+  const g = goals.map(x => {
+    const p = goalProgress(x, h, pk, from, to);
+    const c = x.catId ? cat(x.catId).color : 'var(--cobalt)';
+    return `<div class="goal"><div class="goal-top"><b title="${esc(x.title)}">${esc(x.title)}</b><small>${p.label}</small>
+      ${p.counter ? `<button class="icon-btn sm" data-act="goalCount" data-gid="${x.id}" data-pk="${pk}" data-d="-1" aria-label="Azalt">${ICON.minus}</button><button class="icon-btn sm" data-act="goalCount" data-gid="${x.id}" data-pk="${pk}" data-d="1" aria-label="Artır">${ICON.plus}</button>` : ''}
+      <button class="icon-btn sm" data-act="editGoal" data-gid="${x.id}" aria-label="Düzenle">${ICON.more}</button></div>
+      <div class="gbar ${p.pct >= 1 ? 'hit' : ''}"><i style="width:${Math.min(100, p.pct * 100)}%;--c:${c}"></i></div></div>`;
+  }).join('');
+  const tl = tasks.map(t => `<li class="${t.done ? 'is-done' : ''}" style="--c:${cat(t.catId).color}">
+    <button class="chk" data-act="htDone" data-tid="${t.id}" aria-label="Tamamlandı">${ICON.check}</button>
+    <span class="t" title="${esc(t.title)}">${esc(t.title)}</span>
+    <button class="icon-btn sm" data-act="editTask" data-tid="${t.id}" aria-label="Düzenle">${ICON.more}</button></li>`).join('');
+  return `<div class="plan-col">
+    <div class="panel-h"><div class="grow"><h2>${compact ? H_NAME[h] : lb.t}</h2><div class="per">${compact ? lb.t + ', ' + lb.s : lb.s}</div></div>
+      <button class="btn sm ghost" data-act="editGoal" data-h="${h}">Hedef</button></div>
+    ${goals.length ? `<h3 class="sub-h" style="margin-top:4px">Hedefler</h3>${g}` : compact ? '' : `<p class="muted" style="font-size:12.5px">Bu dönem için hedef yok.</p>`}
+    <h3 class="sub-h">Görevler</h3>
+    <ul class="tl">${tl || `<li class="muted" style="border:0">${H_NAME[h]} için görev yok.</li>`}</ul>
+    <div class="add-line"><input class="inp sm" placeholder="${H_NAME[h]} yapılacak…" data-enter="addHTask" data-h="${h}" data-pk="${pk}"><button class="btn sm" data-act="addHTask" data-h="${h}" data-pk="${pk}">Ekle</button></div>
+  </div>`;
+}
+VIEWS.plan = {
+  head() { return { t: 'Hedefler ve görevler', s: 'Hafta, ay ve yıl ufkunda neyi bitireceğin', nav: true }; },
+  html() {
+    const H_LBL = { week: 'Haftalık', month: 'Aylık', year: 'Yıllık' };
+    const t = todayStr();
+    const all = S.goals.map(g => {
+      const pk = g.recurring ? periodKey(g.horizon, cur) : (g.period || periodKey(g.horizon, cur));
+      const [a, b] = periodFromKey(g.horizon, pk);
+      const p = goalProgress(g, g.horizon, pk, a, b);
+      const st = p.pct >= 1 ? ['ok', 'Tamamlandı'] : (b < t ? ['miss', 'Dönemi geçti'] : ['run', 'Sürüyor']);
+      return { g, a, b, p, st };
+    }).sort((x, y) => (x.st[0] === 'run' ? -1 : 1) - (y.st[0] === 'run' ? -1 : 1) || y.a.localeCompare(x.a));
+    const done = all.filter(x => x.st[0] === 'ok').length;
+    const rows = all.map(({ g, a, b, p, st }) => `<div class="goal" style="grid-template-columns:1fr auto">
+        <div>
+          <div class="g-t">${esc(g.title)} <span class="pill">${H_LBL[g.horizon]}${g.recurring ? ' · tekrarlı' : ''}</span> <span class="pill ${st[0]}">${st[1]}</span></div>
+          <div class="bar"><i style="width:${Math.round(Math.min(1, p.pct) * 100)}%"></i></div>
+          <div class="g-s">${fmtRange(a, b)} · ${p.label} · %${Math.round(p.pct * 100)}</div>
+        </div>
+        <span class="kv"><button class="icon-btn sm" data-act="editGoal" data-gid="${g.id}" aria-label="Düzenle">${ICON.more}</button></span>
+      </div>`).join('');
+    return `<div class="plan-grid">${['week', 'month', 'year'].map(h => `<section class="panel">${horizonBlock(h)}</section>`).join('')}</div>
+    <section class="panel" style="margin-top:16px">
+      <div class="panel-h"><h2>Tüm hedefler</h2><span class="muted">${all.length} hedef · ${done} tamamlandı</span></div>
+      <p class="muted" style="margin:-4px 0 12px;font-size:12.5px">Tamamlananlar ve dönemi geçenler dahil hepsi burada durur. Tekrarlı hedefler yukarıda seçili döneme göre gösterilir.</p>
+      ${rows || `<div class="empty">Henüz hedef yok. Yukarıdaki ufuklardan ekleyebilirsin.</div>`}
+    </section>
+    <p class="muted" style="margin-top:14px;font-size:12.5px">Hedef türleri: odak süresi (pomodoro kayıtlarından), rutin istikrarı (tamamlama yüzdesi), tamamlanan görev sayısı ve elle sayaç. "Her dönem tekrarla" seçilen hedefler her yeni hafta/ay/yılda kendiliğinden görünür.</p>`;
+  }
+};
+
+/* ---------- reports ---------- */
+function repRange() {
+  const u = S.ui, n = new Date();
+  const m = mondayOf(n);
+  switch (u.repRange) {
+    case 'lastWeek': return [ymd(addDays(m, -7)), ymd(addDays(m, -1)), 'Geçen hafta'];
+    case 'thisMonth': return [...periodRange('month', n), 'Bu ay'];
+    case 'lastMonth': { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); return [...periodRange('month', d), 'Geçen ay']; }
+    case 'last90': return [ymd(addDays(n, -89)), ymd(n), 'Son 90 gün'];
+    case 'thisYear': return [...periodRange('year', n), 'Bu yıl'];
+    case 'custom': return [u.repFrom || ymd(addDays(n, -6)), u.repTo || ymd(n), 'Özel aralık'];
+    default: return [ymd(m), ymd(addDays(m, 6)), 'Bu hafta'];
+  }
+}
+function metrics(from, to) {
+  const end = to > todayStr() ? todayStr() : to;
+  const rs = rangeStats(from, to);
+  const ses = sessionsIn(from, to);
+  const focus = ses.reduce((a, s) => a + s.mins, 0);
+  const tdone = tasksDoneIn(from, to).length;
+  const topen = S.tasks.filter(t => !t.done && t.scope === 'day' && t.date >= from && t.date <= end).length;
+  const days = from <= end ? rangeDates(from, end) : [];
+  const perDay = days.map(ds => { const s = dayStats(ds); return { ds, rate: s.total ? s.done / s.total : null, focus: ses.filter(x => x.date === ds).reduce((a, x) => a + x.mins, 0) }; });
+  const wd = Array.from({ length: 7 }, () => ({ t: 0, d: 0 }));
+  days.forEach(ds => { const s = dayStats(ds); const w = wd[isoDow(parseYmd(ds)) - 1]; w.t += s.total; w.d += s.done; });
+  const byCat = {};
+  ses.forEach(s => { const k = s.catId || 'none'; byCat[k] = (byCat[k] || 0) + s.mins; });
+  const perR = routineStats(from, to).map(x => ({ ...x, rate: x.done / x.plan })).sort((a, b) => b.rate - a.rate || b.plan - a.plan);
+  const planMin = perR.reduce((a, x) => a + x.planMin, 0), doneMin = perR.reduce((a, x) => a + x.doneMin, 0);
+  const active = perDay.filter(d => d.rate != null && d.rate > 0).length;
+  const perfect = perDay.filter(d => d.rate === 1).length;
+  const byTitle = {};
+  ses.forEach(s => { byTitle[s.title || '—'] = (byTitle[s.title || '—'] || 0) + s.mins; });
+  const topFocus = Object.entries(byTitle).sort((a, b) => b[1] - a[1])[0] || null;
+  return { rs, focus, sessions: ses.length, tdone, topen, perDay, wd, byCat, perR, days: days.length, planMin, doneMin, active, perfect, topFocus };
+}
+function barChart(data, { h = 140, max = null, fmt = v => v, color = 'var(--turq)', labels = [] }) {
+  const W = 600, pad = 24, n = data.length || 1;
+  const mx = max ?? Math.max(1, ...data.map(v => v || 0));
+  const bw = (W - pad) / n;
+  let bars = '';
+  data.forEach((v, i) => {
+    const bh = v == null ? 0 : (v / mx) * (h - 34);
+    const w = Math.min(bw * .7, 56), x = pad + i * bw + (bw - w) / 2;
+    bars += `<rect x="${x}" y="${h - 16 - bh}" width="${Math.max(1, w)}" height="${Math.max(v ? 1.5 : 0, bh)}" rx="3" fill="${v == null ? 'var(--sunk)' : color}"><title>${labels[i] || ''}: ${v == null ? '—' : fmt(v)}</title></rect>`;
+    if (n <= 16 && v) bars += `<text class="bv" x="${pad + i * bw + bw / 2}" y="${h - 20 - bh}" text-anchor="middle">${fmt(v)}</text>`;
+  });
+  const step = Math.ceil(n / 10);
+  const lab = labels.map((l, i) => i % step === 0 ? `<text x="${pad + i * bw + bw / 2}" y="${h - 3}" text-anchor="middle">${l}</text>` : '').join('');
+  return `<svg viewBox="0 0 ${W} ${h}" role="img"><line x1="${pad}" x2="${W}" y1="${h - 16}" y2="${h - 16}" stroke="var(--line)"/>
+    <text x="0" y="10">${fmt(mx)}</text>${bars}${lab}</svg>`;
+}
+function buildReport(from, to, title) {
+  const M = metrics(from, to);
+  const len = rangeDates(from, to).length;
+  const pf = ymd(addDays(parseYmd(from), -len)), pt = ymd(addDays(parseYmd(from), -1));
+  const P = metrics(pf, pt);
+  const pp = r => r == null ? '—' : '%' + Math.round(r * 100);
+  const dl = (a, b) => (a == null || b == null) ? '' : ` (önceki döneme göre ${Math.round((a - b) * 100) >= 0 ? '+' : ''}${Math.round((a - b) * 100)} puan)`;
+  const lines = [`MeCal ${title}`, fmtRange(from, to), ''];
+  lines.push(`Rutin tamamlama: ${pp(M.rs.rate)}, ${M.rs.done}/${M.rs.total}${dl(M.rs.rate, P.rs.rate)}`);
+  if (M.rs.skip) lines.push(`Bilinçli atlanan: ${M.rs.skip}`);
+  if (M.planMin) lines.push(`Rutin süresi: ${fmtH(M.doneMin)} tamamlandı / ${fmtH(M.planMin)} planlandı (%${Math.round(M.doneMin / M.planMin * 100)})`);
+  if (M.days) lines.push(`Aktif gün: ${M.active}/${M.days}; kusursuz gün: ${M.perfect}`);
+  lines.push(`Odak: ${fmtH(M.focus)}, ${M.sessions} seans${M.days ? `, günlük ortalama ${fmtH(M.focus / M.days)}` : ''}${M.sessions ? `, seans ortalaması ${Math.round(M.focus / M.sessions)} dk` : ''}${P.focus ? ` (önceki: ${fmtH(P.focus)})` : ''}`);
+  if (M.topFocus) lines.push(`En çok odak: ${M.topFocus[0]} (${fmtH(M.topFocus[1])})`);
+  lines.push(`Görevler: ${M.tdone} tamamlandı, ${M.topen} açık`);
+  const good = M.perR.filter(x => x.plan >= 2).slice(0, 3);
+  const weak = M.perR.filter(x => x.plan >= 2).slice(-3).reverse().filter(x => !good.includes(x));
+  if (good.length) lines.push(`En istikrarlı: ${good.map(x => `${x.r.title} ${pp(x.rate)}`).join(', ')}`);
+  if (weak.length) lines.push(`Zayıf halka: ${weak.map(x => `${x.r.title} ${pp(x.rate)}`).join(', ')}`);
+  const wds = M.wd.map((w, i) => ({ i, r: w.t ? w.d / w.t : null })).filter(x => x.r != null).sort((a, b) => b.r - a.r);
+  if (wds.length > 1) lines.push(`En güçlü gün: ${DOW_L[wds[0].i]} ${pp(wds[0].r)}; en zayıf: ${DOW_L[wds[wds.length - 1].i]} ${pp(wds[wds.length - 1].r)}`);
+  const str = S.routines.map(r => ({ r, n: streak(r.id) })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n).slice(0, 3);
+  if (str.length) lines.push(`Süren seriler: ${str.map(x => `${x.r.title} ${x.n} gün`).join(', ')}`);
+  const cats = Object.entries(M.byCat).sort((a, b) => b[1] - a[1]);
+  if (cats.length) lines.push(`Odak dağılımı: ${cats.map(([k, v]) => `${k === 'none' ? 'Serbest' : cat(k).name} ${fmtH(v)}`).join(', ')}`);
+  const gl = goalsInRange(from, to).map(({ g, p }) => `${g.title} ${p.label} (%${Math.round(p.pct * 100)}${p.pct >= 1 ? ', tamam' : ''})`);
+  if (gl.length) lines.push(`Hedefler: ${gl.join('; ')}`);
+  return lines.join('\n');
+}
+VIEWS.reports = {
+  head() { return { t: 'Raporlar', s: 'İstatistikler ve kısa özetler', nav: false }; },
+  html() {
+    const [from, to, label] = repRange();
+    const M = metrics(from, to);
+    const len = rangeDates(from, to).length;
+    const P = metrics(ymd(addDays(parseYmd(from), -len)), ymd(addDays(parseYmd(from), -1)));
+    const dl = (a, b, pts) => { if (a == null || b == null || (!b && !a)) return ''; const d = pts ? Math.round((a - b) * 100) : Math.round(a - b); if (!d) return ''; return `<span class="dlt ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '+' : ''}${pts ? d + ' puan' : fmtH(Math.abs(d)).replace(/^/, d < 0 ? '−' : '')}</span>`; };
+    const ranges = [['thisWeek', 'Bu hafta'], ['lastWeek', 'Geçen hafta'], ['thisMonth', 'Bu ay'], ['lastMonth', 'Geçen ay'], ['last90', 'Son 90 gün'], ['thisYear', 'Bu yıl'], ['custom', 'Özel']];
+    const labels = M.perDay.map(d => M.perDay.length > 40 ? `${parseYmd(d.ds).getDate()}.${parseYmd(d.ds).getMonth() + 1}` : String(parseYmd(d.ds).getDate()));
+    const catTotal = Object.values(M.byCat).reduce((a, b) => a + b, 0);
+    const cats = Object.entries(M.byCat).sort((a, b) => b[1] - a[1]);
+    const text = buildReport(from, to, label.toLowerCase() + ' özeti');
+    return `<div class="rep-bar">${ranges.map(([k, l]) => `<button class="btn sm ${S.ui.repRange === k ? 'pri' : ''}" data-act="repRange" data-r="${k}">${l}</button>`).join('')}
+      ${S.ui.repRange === 'custom' ? `<input type="date" class="inp sm" value="${from}" data-chg="repFrom"><input type="date" class="inp sm" value="${to}" data-chg="repTo">` : ''}
+      <span class="muted" style="margin-left:auto">${fmtRange(from, to)}</span></div>
+    <div class="kpis">
+      <div class="kpi"><b>${M.rs.rate == null ? '—' : '%' + Math.round(M.rs.rate * 100)}</b><span>rutin tamamlama</span>${dl(M.rs.rate, P.rs.rate, true)}</div>
+      <div class="kpi"><b>${fmtH(M.focus)}</b><span>odak, ${M.sessions} seans</span>${dl(M.focus, P.focus)}</div>
+      <div class="kpi"><b>${M.tdone}</b><span>tamamlanan görev, ${M.topen} açık</span></div>
+      <div class="kpi"><b>${fmtH(M.doneMin)}</b><span>rutinlerde geçen süre / plan ${fmtH(M.planMin)}</span></div>
+      <div class="kpi"><b>${M.perfect}</b><span>kusursuz gün · ${M.active}/${M.days} aktif</span></div>
+      <div class="kpi"><b>${Math.max(0, ...S.routines.map(r => streak(r.id)))}</b><span>en uzun süren seri (gün)</span></div>
+    </div>
+    <div class="rep-grid">
+      <section class="panel chart"><div class="panel-h"><h2>Günlük rutin tamamlama</h2></div>${barChart(M.perDay.map(d => d.rate == null ? null : d.rate * 100), { max: 100, fmt: v => '%' + Math.round(v), labels })}</section>
+      <section class="panel chart"><div class="panel-h"><h2>Günlük odak süresi</h2></div>${barChart(M.perDay.map(d => d.focus), { fmt: v => fmtH(v), color: 'var(--coral)', labels })}</section>
+      <section class="panel"><div class="panel-h"><h2>Rutin bazında</h2></div>
+        ${M.perR.length ? `<div style="overflow-x:auto"><table class="rtab"><thead><tr><th>Rutin</th><th style="text-align:right">Plan</th><th style="text-align:right">Bitti</th><th style="text-align:right">Atla</th><th style="text-align:right">Süre</th><th style="text-align:right" title="Güncel seri">Seri</th><th>Oran</th></tr></thead><tbody>
+        ${M.perR.map(x => `<tr><td><i class="dot" style="--c:${cat(x.r.catId).color};margin-right:6px"></i>${esc(x.r.title)}</td><td class="n">${x.plan}</td><td class="n">${x.done}</td><td class="n">${x.skip}</td><td class="n" title="planlanan ${fmtH(x.planMin)}">${fmtH(x.doneMin)}</td><td class="n">${streak(x.r.id)}</td>
+          <td><div style="display:flex;align-items:center;gap:6px"><span class="gbar" style="flex:1;min-width:70px"><i style="width:${x.rate * 100}%;--c:${cat(x.r.catId).color}"></i></span><b style="min-width:38px;text-align:right">%${Math.round(x.rate * 100)}</b></div></td></tr>`).join('')}
+        </tbody></table></div>` : '<div class="empty">Bu aralıkta planlı rutin yok.</div>'}
+      </section>
+      <div class="side">
+        <section class="panel chart"><div class="panel-h"><h2>Haftanın günleri</h2></div>${barChart(M.wd.map(w => w.t ? w.d / w.t * 100 : null), { max: 100, h: 120, fmt: v => '%' + Math.round(v), labels: DOW })}</section>
+        <section class="panel"><div class="panel-h"><h2>Odak dağılımı</h2></div>
+          ${catTotal ? `<div class="stack">${cats.map(([k, v]) => `<i style="width:${v / catTotal * 100}%;background:${k === 'none' ? 'var(--slate)' : cat(k).color}" title="${k === 'none' ? 'Serbest' : esc(cat(k).name)}"></i>`).join('')}</div>
+          <ul class="tl">${cats.map(([k, v]) => `<li><i class="dot" style="--c:${k === 'none' ? 'var(--slate)' : cat(k).color}"></i><span class="t">${k === 'none' ? 'Serbest çalışma' : esc(cat(k).name)}</span><b>${fmtH(v)}</b></li>`).join('')}</ul>`
+          : '<div class="empty">Henüz odak seansı yok. Bugün ekranındaki sayacı bir işe bağlayıp başlat.</div>'}
+        </section>
+        <section class="panel"><div class="panel-h"><h2>Hedefler</h2></div>
+          ${(() => { const gs = goalsInRange(from, to); if (!gs.length) return '<div class="empty">Bu aralığa denk gelen hedef yok.</div>';
+            const hit = gs.filter(x => x.p.pct >= 1).length;
+            return `<p class="muted" style="margin:-2px 0 10px;font-size:12.5px">${gs.length} hedef · ${hit} tamamlandı</p>` + gs.map(({ g, a, b, p }) => `<div class="goal" style="grid-template-columns:1fr">
+              <div><div class="g-t">${esc(g.title)} ${p.pct >= 1 ? `<span class="pill ok">Tamam</span>` : ''}</div>
+              <div class="bar"><i style="width:${Math.round(Math.min(1, p.pct) * 100)}%"></i></div>
+              <div class="g-s">${fmtRange(a, b)} · ${p.label} · %${Math.round(p.pct * 100)}</div></div></div>`).join(''); })()}
+        </section>
+      </div>
+    </div>
+    <section class="panel" style="margin-bottom:18px">
+      <div class="panel-h"><h2>Kısa özet</h2><span class="grow"></span>
+        <button class="btn sm" data-act="copyReport">Kopyala</button>
+        <button class="btn sm" data-act="dlReport">.md indir</button>
+        <button class="btn sm" data-act="mailReport">E-postayla gönder</button>
+        <button class="btn sm pri" data-act="saveReport" data-from="${from}" data-to="${to}" data-label="${esc(label)}">Arşive kaydet</button></div>
+      <div class="report-text" id="reportText">${esc(text)}</div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h2>Rapor arşivi</h2><span class="grow"></span>
+        <label class="kv muted" style="font-size:12.5px">Otomatik rapor
+          <select class="sel sm" data-chg="setReport"><option value="off" ${S.settings.report === 'off' ? 'selected' : ''}>Kapalı</option><option value="weekly" ${S.settings.report === 'weekly' ? 'selected' : ''}>Her pazartesi, geçen hafta</option><option value="monthly" ${S.settings.report === 'monthly' ? 'selected' : ''}>Her ayın 1'i, geçen ay</option></select></label></div>
+      ${S.reports.length ? `<ul class="arch">${S.reports.map(r => `<li><b>${esc(r.label)}</b><span class="muted">${fmtRange(r.from, r.to)}</span>
+        <button class="btn sm ghost" data-act="viewReport" data-id="${r.id}">Aç</button><button class="icon-btn sm" data-act="delReport" data-id="${r.id}" aria-label="Sil">${ICON.x}</button></li>`).join('')}</ul>`
+        : '<p class="muted">Arşiv boş. Otomatik rapor açıksa her dönem başında MeCal\'i açtığında önceki dönemin özeti buraya kaydedilir.</p>'}
+    </section>`;
+  }
+};
+function autoReport() {
+  const f = S.settings.report; if (f === 'off') return;
+  const n = new Date(); let from, to, label, key;
+  if (f === 'weekly') { const m = mondayOf(n); from = ymd(addDays(m, -7)); to = ymd(addDays(m, -1)); key = 'W:' + from; label = `Hafta ${isoWeek(parseYmd(from)).w} özeti`; }
+  else { const d = new Date(n.getFullYear(), n.getMonth() - 1, 1); [from, to] = periodRange('month', d); key = 'M:' + from; label = `${MON[d.getMonth()]} ${d.getFullYear()} özeti`; }
+  if (S.reports.some(r => r.key === key)) return;
+  if (to < S.meta.createdAt.slice(0, 10)) return;
+  S.reports.unshift({ id: uid('rep'), key, label, from, to, createdAt: new Date().toISOString(), text: buildReport(from, to, label.toLowerCase()) });
+  persist();
+  setTimeout(() => toast(`${label} hazır.`, 'Aç', () => { go('reports'); }), 600);
+}
+
+/* ---------- ICS ---------- */
+const BYDAY = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+const icsEsc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+function fold(line) {
+  const enc = new TextEncoder(); const parts = []; let curS = '', len = 0, max = 75;
+  for (const ch of line) { const l = enc.encode(ch).length; if (len + l > max) { parts.push(curS); curS = ch; len = l; max = 74; } else { curS += ch; len += l; } }
+  parts.push(curS); return parts.join('\r\n ');
+}
+const icsDT = (ds, t) => ds.replace(/-/g, '') + 'T' + t.replace(':', '') + '00';
+const icsD = ds => ds.replace(/-/g, '');
+const utcStamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+function endOf(ds, t, dur) { const d = parseYmd(ds); d.setHours(0, toMin(t) + dur, 0, 0); return [ymd(d), `${pad(d.getHours())}:${pad(d.getMinutes())}`]; }
+function firstOccurrence(r, fromDs) {
+  let d = parseYmd(fromDs > r.start ? fromDs : r.start);
+  for (let i = 0; i < 370; i++) { const ds = ymd(d); if (r.end && ds > r.end) return null; if (isScheduled(r, ds)) return ds; d = addDays(d, 1); }
+  return null;
+}
+function openEndPause(r, afterDs) { const p = r.paused.filter(p => !p.to && p.from > afterDs).sort((a, b) => a.from.localeCompare(b.from))[0]; return p ? ymd(addDays(parseYmd(p.from), -1)) : null; }
+function icsWrap(events) {
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MeCal//TR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:MeCal', 'X-WR-TIMEZONE:Europe/Istanbul',
+    'BEGIN:VTIMEZONE', 'TZID:Europe/Istanbul', 'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0300', 'TZOFFSETTO:+0300', 'TZNAME:+03', 'END:STANDARD', 'END:VTIMEZONE',
+    ...events.flat(), 'END:VCALENDAR'].map(fold).join('\r\n') + '\r\n';
+}
+function vevent({ uid: u, ds, time, dur, title, note, catName, reminder, rrule, exdates }) {
+  const L = ['BEGIN:VEVENT', `UID:${u}`, `DTSTAMP:${utcStamp()}`];
+  if (time) { const [ed, et] = endOf(ds, time, dur); L.push(`DTSTART;TZID=Europe/Istanbul:${icsDT(ds, time)}`, `DTEND;TZID=Europe/Istanbul:${icsDT(ed, et)}`); }
+  else L.push(`DTSTART;VALUE=DATE:${icsD(ds)}`, `DTEND;VALUE=DATE:${icsD(ymd(addDays(parseYmd(ds), 1)))}`);
+  if (rrule) L.push(`RRULE:${rrule}`);
+  if (exdates && exdates.length) L.push(time ? `EXDATE;TZID=Europe/Istanbul:${exdates.map(d => icsDT(d, time)).join(',')}` : `EXDATE;VALUE=DATE:${exdates.map(icsD).join(',')}`);
+  L.push(`SUMMARY:${icsEsc(title)}`);
+  if (note) L.push(`DESCRIPTION:${icsEsc(note)}`);
+  if (catName) L.push(`CATEGORIES:${icsEsc(catName)}`);
+  if (S.settings.busyFree) L.push('TRANSP:TRANSPARENT', 'X-MICROSOFT-CDO-BUSYSTATUS:FREE');
+  if (time && reminder > 0) L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsEsc(title)}`, `TRIGGER:-PT${reminder}M`, 'END:VALARM');
+  L.push('END:VEVENT');
+  return L;
+}
+function routineEvents(onlyTimed) {
+  const t = todayStr();
+  const out = [];
+  S.routines.filter(r => r.days.length).forEach(r => {
+    const first = firstOccurrence(r, t); if (!first) return;
+    const until = openEndPause(r, first) || r.end;
+    const base = `FREQ=WEEKLY;WKST=MO;BYDAY=${[...r.days].sort().map(d => BYDAY[d - 1]).join(',')}`;
+    const pauseEx = [];
+    r.paused.filter(p => p.to && p.to >= first).forEach(p => rangeDates(p.from > first ? p.from : first, p.to).forEach(ds => { if (r.days.includes(isoDow(parseYmd(ds)))) pauseEx.push(ds); }));
+    r.slots.forEach(sl => {
+      if (onlyTimed && !sl.time) return;
+      const iid = r.id + '.' + sl.id;
+      let rule = base;
+      if (until) rule += sl.time ? `;UNTIL=${icsD(until)}T205959Z` : `;UNTIL=${icsD(until)}`;
+      const ex = Object.keys(S.overrides).filter(ds => ds >= first && (!until || ds <= until) && S.overrides[ds][iid] && isScheduled(r, ds)
+        && (S.overrides[ds][iid].removed || S.overrides[ds][iid].time || S.overrides[ds][iid].dur)).sort();
+      out.push(vevent({ uid: `mecal-routine-${r.id}-${sl.id}@mecal.local`, ds: first, time: sl.time, dur: sl.dur, title: r.title, note: r.note, catName: cat(r.catId).name, reminder: r.reminder, rrule: rule, exdates: [...new Set([...ex, ...pauseEx])].sort() }));
+    });
+  });
+  return out;
+}
+function oneOffEvents(from, to) {
+  const ev = [];
+  rangeDates(from, to).forEach(ds => {
+    routinesFor(ds).forEach(i => {
+      const o = ov(ds, i.id); if (!(o.added || o.time || o.dur) || !i.time) return;
+      const r = rtOf(i.id);
+      ev.push(vevent({ uid: `mecal-inst-${i.id}-${ds}@mecal.local`, ds, time: i.time, dur: i.dur, title: i.title, note: i.note, catName: cat(i.catId).name, reminder: r ? r.reminder : S.settings.reminder }));
+    });
+    S.tasks.filter(t => t.scope === 'day' && t.date === ds).forEach(t => {
+      ev.push(vevent({ uid: `mecal-task-${t.id}@mecal.local`, ds, time: t.time, dur: t.dur || 30, title: t.title, note: t.note, catName: cat(t.catId).name, reminder: t.reminder ?? S.settings.reminder }));
+    });
+  });
+  return ev;
+}
+function download(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function deeplink(it) {
+  const s = it.time || '09:00';
+  const [ed, et] = endOf(it.date, s, it.dur);
+  const p = new URLSearchParams({ subject: it.title, startdt: `${it.date}T${s}:00`, enddt: `${ed}T${et}:00`, body: it.note || 'MeCal', path: '/calendar/action/compose' });
+  if (!it.time) p.set('allday', 'true');
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${p}`;
+}
+
+/* ---------- Microsoft Graph (isteğe bağlı) ---------- */
+const G = { app: null, account: null };
+const SCOPES = ['Calendars.ReadWrite'];
+const TZW = 'Turkey Standard Time';
+const GDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+function glog(msg) { const el = $('#gLog'); if (el) { el.textContent += (el.textContent ? '\n' : '') + `${fromMin(nowMin())}  ${msg}`; el.scrollTop = el.scrollHeight; } }
+async function gInit() {
+  if (!S.settings.clientId) throw new Error('Önce Uygulama (client) kimliğini gir.');
+  if (location.protocol === 'file:') throw new Error('Canlı eşitleme için MeCal bir http(s) adresinden açılmalı (ör. http://localhost:8080 veya GitHub Pages). file:// ile Microsoft oturumu açılamaz.');
+  if (!window.msal) await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.30.0/lib/msal-browser.min.js'; s.onload = res; s.onerror = () => rej(new Error('MSAL kütüphanesi yüklenemedi (internet?)')); document.head.appendChild(s); });
+  if (!G.app) {
+    G.app = new msal.PublicClientApplication({ auth: { clientId: S.settings.clientId, authority: 'https://login.microsoftonline.com/consumers', redirectUri: location.origin + location.pathname }, cache: { cacheLocation: 'localStorage' } });
+    await G.app.initialize();
+  }
+  G.account = G.account || G.app.getAllAccounts()[0] || null;
+}
+async function gToken() {
+  await gInit();
+  if (!G.account) { const r = await G.app.loginPopup({ scopes: SCOPES, prompt: 'select_account' }); G.account = r.account; }
+  try { return (await G.app.acquireTokenSilent({ scopes: SCOPES, account: G.account })).accessToken; }
+  catch (e) { return (await G.app.acquireTokenPopup({ scopes: SCOPES, account: G.account })).accessToken; }
+}
+async function gFetch(path, opt = {}) {
+  const tok = await gToken();
+  const r = await fetch('https://graph.microsoft.com/v1.0' + path, { ...opt, body: opt.body ? JSON.stringify(opt.body) : undefined,
+    headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' } });
+  if (r.status === 204) return null;
+  const j = await r.json().catch(() => null);
+  if (!r.ok) { const e = new Error((j && j.error && j.error.message) || 'HTTP ' + r.status); e.status = r.status; throw e; }
+  return j;
+}
+async function gCalendar() {
+  const name = S.settings.calendarName || 'MeCal';
+  if (S.graph.calendarId) {
+    try { await gFetch('/me/calendars/' + S.graph.calendarId); return S.graph.calendarId; }
+    catch (e) { if (e.status !== 404) throw e; S.graph.calendarId = null; S.graph.map = {}; }
+  }
+  const list = await gFetch('/me/calendars?$top=100');
+  let c = (list.value || []).find(x => x.name === name);
+  if (!c) { c = await gFetch('/me/calendars', { method: 'POST', body: { name } }); glog(`"${name}" takvimi oluşturuldu.`); }
+  S.graph.calendarId = c.id; persist();
+  return c.id;
+}
+const gTimeObj = (ds, t) => ({ dateTime: `${ds}T${t}:00`, timeZone: TZW });
+function gEventBody({ ds, time, dur, title, note, catName, reminder }) {
+  const allDay = !time;
+  const b = { subject: title, body: { contentType: 'text', content: [note, catName ? `Kategori: ${catName}` : '', 'MeCal'].filter(Boolean).join('\n') },
+    isAllDay: allDay, showAs: S.settings.busyFree ? 'free' : 'busy', isReminderOn: !allDay && reminder > 0, reminderMinutesBeforeStart: reminder || 0 };
+  if (allDay) { b.start = gTimeObj(ds, '00:00'); b.end = gTimeObj(ymd(addDays(parseYmd(ds), 1)), '00:00'); }
+  else { const [ed, et] = endOf(ds, time, dur); b.start = gTimeObj(ds, time); b.end = gTimeObj(ed, et); }
+  return b;
+}
+async function gUpsert(key, body, cal) {
+  const id = S.graph.map[key];
+  if (id) {
+    try { await gFetch('/me/events/' + id, { method: 'PATCH', body }); return 'u'; }
+    catch (e) { if (e.status !== 404) throw e; }
+  }
+  const ev = await gFetch(`/me/calendars/${cal}/events`, { method: 'POST', body });
+  S.graph.map[key] = ev.id; persist(); return 'c';
+}
+async function gDelete(key) {
+  const id = S.graph.map[key]; if (!id) return;
+  try { await gFetch('/me/events/' + id, { method: 'DELETE' }); } catch (e) { if (e.status !== 404) throw e; }
+  delete S.graph.map[key]; persist();
+}
+async function gSyncRoutines() {
+  const cal = await gCalendar(); const t = todayStr();
+  const n = { c: 0, u: 0, d: 0 };
+  for (const r of S.routines) {
+    for (const sl of r.slots) {
+      const key = 'r:' + r.id + '.' + sl.id;
+      const first = r.days.length && (sl.time || S.ui.icsUntimed) ? firstOccurrence(r, t) : null;
+      if (!first) { if (S.graph.map[key]) { await gDelete(key); n.d++; } continue; }
+      const until = openEndPause(r, first) || r.end;
+      const body = gEventBody({ ds: first, time: sl.time, dur: sl.dur, title: r.title, note: r.note, catName: cat(r.catId).name, reminder: r.reminder });
+      body.recurrence = { pattern: { type: 'weekly', interval: 1, daysOfWeek: [...r.days].sort().map(d => GDAYS[d - 1]), firstDayOfWeek: 'monday' },
+        range: until ? { type: 'endDate', startDate: first, endDate: until } : { type: 'noEnd', startDate: first } };
+      n[await gUpsert(key, body, cal)]++;
+    }
+    glog(`${r.title}: tamam`);
+  }
+  for (const k of Object.keys(S.graph.map)) if (k.startsWith('r:') && !slotOf(k.slice(2))) { await gDelete(k); n.d++; }
+  return n;
+}
+async function gSyncTasks(from, to) {
+  const cal = await gCalendar();
+  const n = { c: 0, u: 0, d: 0 };
+  for (const ds of rangeDates(from, to)) {
+    for (const t of S.tasks.filter(x => x.scope === 'day' && x.date === ds)) {
+      n[await gUpsert('t:' + t.id, gEventBody({ ds, time: t.time, dur: t.dur || 30, title: t.title, note: t.note, catName: cat(t.catId).name, reminder: t.reminder ?? S.settings.reminder }), cal)]++;
+    }
+    for (const i of routinesFor(ds)) {
+      const o = ov(ds, i.id); if (!(o.added || o.time || o.dur) || !i.time) continue;
+      const r = rtOf(i.id);
+      n[await gUpsert(`i:${i.id}:${ds}`, gEventBody({ ds, time: i.time, dur: i.dur, title: i.title, note: i.note, catName: cat(i.catId).name, reminder: r ? r.reminder : S.settings.reminder }), cal)]++;
+    }
+  }
+  for (const k of Object.keys(S.graph.map)) {
+    if (k.startsWith('t:')) { const t = task(k.slice(2)); if (!t || t.scope !== 'day') { await gDelete(k); n.d++; } }
+    if (k.startsWith('i:')) { const [, iid, ds] = k.split(':'); const o = ov(ds, iid); if (!rtOf(iid) || !(o.added || o.time || o.dur)) { await gDelete(k); n.d++; } }
+  }
+  return n;
+}
+async function gRun(label, fn) {
+  const btns = $$('[data-graph]'); btns.forEach(b => b.disabled = true);
+  glog(label + '…');
+  try { const n = await fn(); glog(`Bitti: ${n ? `${n.c} yeni, ${n.u} güncellendi, ${n.d} silindi` : 'tamam'}`); toast(label + ' tamamlandı.'); }
+  catch (e) { glog('Hata: ' + e.message); toast('Outlook: ' + e.message); }
+  finally { btns.forEach(b => b.disabled = false); persist(); }
+}
+
+VIEWS.outlook = {
+  head() { return { t: 'Outlook', s: 'Rutinleri seri olarak bir kez aktar; tek tek gönderme devri bitti', nav: false }; },
+  html() {
+    const m = mondayOf(new Date());
+    const timed = S.routines.filter(r => r.days.length).reduce((a, r) => a + r.slots.filter(s => s.time).length, 0);
+    const untimed = S.routines.filter(r => r.days.length).reduce((a, r) => a + r.slots.filter(s => !s.time).length, 0);
+    const mapped = Object.keys(S.graph.map).length;
+    return `<div class="two">
+    <section class="panel">
+      <div class="panel-h"><h2>Toplu aktarma (.ics)</h2><span class="tag-rec">Önerilen, kurulum yok</span></div>
+      <p class="muted">Rutindeki her saat Outlook'a <b>tekrarlayan bir seri</b> olarak girer: günleri, saati, süresi ve hatırlatıcısıyla. ${timed} saatli tekrar ${timed} seri demek; bir kez içe aktarınca her hafta telefonunda ve bilgisayarında görünür.</p>
+      <ol class="steps">
+        <li><b>Dosyayı indir.</b> Aşağıdaki düğme tüm rutin serilerini tek dosyada verir.</li>
+        <li><b>Outlook web'de ayrı bir takvime yükle.</b> Takvim görünümünde "Takvim ekle" → "Dosyadan yükle" adımıyla dosyayı seç ve hedef olarak yeni bir "MeCal" takvimi seç. Ayrı takvim, sonradan temizlemeyi tek tıka indirir.</li>
+        <li><b>Rutin değiştiğinde:</b> MeCal takvimini Outlook'ta sil, yenisini oluştur, dosyayı yeniden yükle. İçe aktarma güncelleme yapmaz; aynı dosyayı iki kez yüklemek kopya üretebilir.</li>
+      </ol>
+      <div class="kv" style="margin-bottom:12px">
+        <label class="check"><input type="checkbox" data-chg="icsUntimed" ${S.ui.icsUntimed ? 'checked' : ''}> Saatsiz rutinleri tüm gün etkinliği olarak ekle (${untimed})</label>
+        <label class="check"><input type="checkbox" data-chg="busyFree" ${S.settings.busyFree ? 'checked' : ''}> Takvimde "müsait" göster</label>
+      </div>
+      <button class="btn pri" data-act="icsRoutines">${ICON.down}Rutin serilerini indir</button>
+      <h3 class="sub-h">Tek seferlik işler</h3>
+      <p class="muted" style="font-size:13px">Görevler ve yalnızca belirli bir güne eklenen ya da saati değiştirilen rutin örnekleri. Aynı aralığı iki kez yükleme.</p>
+      <div class="kv" style="margin-top:10px">
+        <input type="date" class="inp sm" id="icsFrom" value="${ymd(m)}"><span class="muted">→</span><input type="date" class="inp sm" id="icsTo" value="${ymd(addDays(m, 6))}">
+        <button class="btn sm" data-act="icsOneOff">${ICON.down}İndir</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:14px">Tek bir işi hızlıca eklemek için her işin ayrıntı penceresinde "Outlook'ta aç" düğmesi durur; eski yöntemle aynı, ama artık yalnızca istisnalar için.</p>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h2>Canlı eşitleme</h2><span class="tag-opt">İsteğe bağlı, tek seferlik kurulum</span></div>
+      <p class="muted">Microsoft Graph ile MeCal, Outlook'ta kendine ait bir takvimde etkinlik oluşturur, günceller ve siler. Kopya oluşmaz; rutini değiştirip "Eşitle"ye basman yeter.</p>
+      <ol class="steps">
+        <li><b>MeCal'i bir web adresinden aç.</b> Ücretsiz GitHub Pages ya da bilgisayarında <code>npx serve</code> (http://localhost). Microsoft oturumu file:// adresinde çalışmaz.</li>
+        <li><b>Uygulama kaydı oluştur.</b> Microsoft Entra yönetim merkezinde yeni kayıt: hesap türü olarak kişisel Microsoft hesaplarını seç, platform "Tek sayfalı uygulama (SPA)", yönlendirme adresi MeCal'in tam adresi. İzin: <code>Calendars.ReadWrite</code>. Kişisel hesapla kayıt için ücretsiz bir Azure hesabı gerekebilir.</li>
+        <li><b>Uygulama (client) kimliğini buraya yapıştır</b> ve bağlan.</li>
+      </ol>
+      <div class="frow">
+        <label class="f">Uygulama (client) kimliği<input class="inp" value="${esc(S.settings.clientId)}" placeholder="00000000-0000-0000-0000-000000000000" data-chg="clientId"></label>
+        <label class="f">Outlook takvim adı<input class="inp" value="${esc(S.settings.calendarName)}" data-chg="calName"></label>
+      </div>
+      <div class="kv" style="margin-top:12px">
+        <button class="btn pri" data-graph data-act="gRoutines">Rutinleri eşitle</button>
+        <button class="btn" data-graph data-act="gTasks">Bu haftanın tek seferlik işlerini eşitle</button>
+        <button class="btn ghost danger" data-graph data-act="gWipe">MeCal takvimini sil</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:10px">Bağlı kayıt: ${mapped}. Adres: <code>${esc(location.protocol === 'file:' ? 'file:// (eşitleme kapalı)' : location.origin + location.pathname)}</code></p>
+      <div class="log" id="gLog"></div>
+    </section></div>`;
+  }
+};
+
+/* ---------- settings ---------- */
+VIEWS.settings = {
+  head() { return { t: 'Ayarlar', s: 'Veri, yedek ve tercih', nav: false }; },
+  html() {
+    const s = S.settings;
+    const size = new Blob([JSON.stringify(S)]).size;
+    const fsa = 'showSaveFilePicker' in window;
+    return `<div class="two"><div>
+      <section class="panel set-sec"><h2>Veri ve yedek</h2>
+        <p class="muted" style="margin-bottom:12px">Her şey bu tarayıcıda saklanır (${(size / 1024).toFixed(1)} KB, son değişiklik ${new Date(S.meta.updatedAt).toLocaleString('tr-TR')}). Tarayıcı verisi silinirse kaybolur; bu yüzden dosya yedeği önerilir.</p>
+        <div class="kv">
+          <button class="btn pri" data-act="exportJson">${ICON.down}Yedeği indir (.json)</button>
+          <button class="btn" data-act="importFile">Yedek içe aktar</button>
+        </div>
+        <p class="muted" style="font-size:12.5px;margin-top:8px">İçe aktarma eski MeCal (v6) dosyalarını da tanır: şablonlar rutine, geçmiş planlar gün ve saate dönüştürülür.</p>
+        <h3 class="sub-h">Otomatik dosya yedeği</h3>
+        ${fsa ? `<p class="muted" style="font-size:13px">Bir dosya seç; MeCal her değişiklikte oraya yazar. OneDrive klasörü seçersen yedek bulutta da durur.</p>
+          <div class="kv" style="margin-top:8px"><button class="btn" data-act="linkBackup">${backupHandle ? 'Yedek dosyasını değiştir' : 'Yedek dosyası seç'}</button>
+          ${backupHandle ? `<span class="pill">${esc(backupHandle.name)}</span>${backupNeedsPerm ? '<button class="btn sm pri" data-act="resumeBackup">İzni yenile</button>' : ''}` : ''}</div>`
+          : '<p class="muted" style="font-size:13px">Bu tarayıcı otomatik dosya yedeğini desteklemiyor (Chrome veya Edge gerekir). Düzenli olarak .json indir.</p>'}
+      </section>
+      <section class="panel set-sec"><h2>Gün ve görünüm</h2>
+        <div class="frow">
+          <label class="f">Gün başlangıcı<select class="sel" data-chg="dayStart">${Array.from({ length: 10 }, (_, h) => `<option value="${h}" ${h === s.dayStart ? 'selected' : ''}>${pad(h)}:00</option>`).join('')}</select></label>
+          <label class="f">Gün bitişi<select class="sel" data-chg="dayEnd">${[20, 21, 22, 23, 24].map(h => `<option value="${h}" ${h === s.dayEnd ? 'selected' : ''}>${pad(h % 24)}:00</option>`).join('')}</select></label>
+          <label class="f">Tema<select class="sel" data-chg="theme"><option value="auto" ${s.theme === 'auto' ? 'selected' : ''}>Sisteme uy</option><option value="light" ${s.theme === 'light' ? 'selected' : ''}>Açık</option><option value="dark" ${s.theme === 'dark' ? 'selected' : ''}>Koyu</option></select></label>
+          <label class="f">Varsayılan hatırlatıcı<select class="sel" data-chg="reminder">${REMS.map(([v, l]) => `<option value="${v}" ${v === s.reminder ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        </div>
+      </section>
+      <section class="panel set-sec"><h2>Arka plan</h2>
+        ${(() => { const bg = s.bg || { type: 'plain', value: '', dim: 30 };
+          const sw = (v, style, label, extra = '') => `<button class="bg-sw ${bg.value === v ? 'on' : ''}" style="${style}" data-act="bgPick" data-v="${v}" title="${label}" aria-label="${label}"${extra}></button>`;
+          let opts = '';
+          if (bg.type === 'color') opts = BG_COLORS.map(c => sw(c, `background:color-mix(in srgb, ${c} 30%, var(--paper))`, c)).join('');
+          else if (bg.type === 'pattern') opts = [['dots', 'Nokta'], ['grid', 'Izgara'], ['diag', 'Diyagonal'], ['cross', 'Artı']].map(([v, l]) => { const p = patternCss(v); return sw(v, `background-image:${p.image.replace(/"/g, '&quot;')};background-size:${p.size}`, l); }).join('');
+          else if (bg.type === 'motif') opts = [['star', 'Çini yıldızı'], ['wave', 'Dalga'], ['leaf', 'Yaprak']].map(([v, l]) => sw(v, `background-image:${svgUri(motifSvg(v)).replace(/"/g, '&quot;')}`, l)).join('');
+          else if (bg.type === 'image') {
+            let cust = null; try { cust = localStorage.getItem('mecal_bg_img'); } catch (e) {}
+            opts = [['dawn', 'Şafak'], ['sea', 'Deniz'], ['night', 'Gece'], ['mist', 'Sisli tepeler']].map(([v, l]) => sw(v, `background-image:${svgUri(sceneSvg(v)).replace(/"/g, '&quot;')}`, l)).join('')
+              + (cust ? sw('custom', `background-image:url(&quot;${cust}&quot;)`, 'Yüklediğin görsel') : '')
+              + `<button class="bg-sw add" data-act="bgUpload" title="Cihazından görsel yükle">Yükle</button>`;
+          }
+          return `<div class="kv" style="margin-bottom:10px">${[['plain', 'Sade'], ['color', 'Renk'], ['pattern', 'Desen'], ['motif', 'Motif'], ['image', 'Görsel']].map(([v, l]) => `<button class="btn sm ${bg.type === v ? 'pri' : ''}" data-act="bgType" data-v="${v}">${l}</button>`).join('')}</div>
+          ${opts ? `<div class="bg-opts">${opts}</div>` : `<p class="muted" style="font-size:13px;margin:0">Kağıt dokusunda sade zemin.</p>`}
+          ${bg.type !== 'plain' ? `<label class="f" style="margin-top:12px">Soluklaştır<input class="rng" type="range" min="0" max="85" value="${clamp(Number(bg.dim) || 0, 0, 85)}" data-chg="bgDim"></label>` : ''}
+          ${bg.type === 'image' ? `<p class="muted" style="font-size:12px;margin:8px 0 0">Yüklediğin görsel yalnızca bu tarayıcıda saklanır, .json yedeğine girmez.</p>` : ''}`; })()}
+      </section></div>
+      <div>
+      <section class="panel set-sec"><h2>Odak sayacı</h2>
+        <div class="frow">
+          <label class="f">Odak (dk)<input class="inp" type="number" min="5" max="120" value="${s.focus}" data-chg="pFocus"></label>
+          <label class="f">Kısa mola (dk)<input class="inp" type="number" min="1" max="30" value="${s.short}" data-chg="pShort"></label>
+          <label class="f">Uzun mola (dk)<input class="inp" type="number" min="5" max="60" value="${s.long}" data-chg="pLong"></label>
+          <label class="f">Uzun mola her<input class="inp" type="number" min="2" max="8" value="${s.every}" data-chg="pEvery"></label>
+        </div>
+        <div class="kv" style="margin-top:12px">
+          <label class="check"><input type="checkbox" data-chg="autoBreak" ${s.autoBreak ? 'checked' : ''}> Molayı otomatik başlat</label>
+          <label class="check"><input type="checkbox" data-chg="sound" ${s.sound ? 'checked' : ''}> Ses</label>
+          <button class="btn sm" data-act="askNotify">Bildirim izni ver</button>
+        </div>
+      </section>
+      <section class="panel set-sec"><h2>Kısayollar</h2>
+        <p class="muted" style="font-size:13px"><code>N</code> yeni görev, <code>Boşluk</code> sayacı başlat/duraklat, <code>←</code> <code>→</code> önceki/sonraki dönem, <code>T</code> bugüne dön, <code>1</code>–<code>8</code> görünümler.</p>
+      </section>
+      <section class="panel set-sec"><h2>Sıfırla</h2>
+        <p class="muted" style="font-size:13px;margin-bottom:10px">Tüm rutinler, kayıtlar ve raporlar silinir. Önce yedek indir.</p>
+        <button class="btn danger" data-act="resetAll">Her şeyi sil</button>
+      </section></div></div>`;
+  }
+};
+
+/* ---------- file backup (File System Access) ---------- */
+let backupHandle = null, backupNeedsPerm = false;
+const idb = (() => {
+  let dbp = null;
+  const db = () => dbp || (dbp = new Promise((res, rej) => { const r = indexedDB.open('mecal', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  return {
+    get: k => db().then(d => new Promise((res, rej) => { const q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); })),
+    set: (k, v) => db().then(d => new Promise((res, rej) => { const tx = d.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }))
+  };
+})();
+async function initBackup() {
+  try { backupHandle = await idb.get('backupHandle') || null; if (backupHandle) backupNeedsPerm = (await backupHandle.queryPermission({ mode: 'readwrite' })) !== 'granted'; } catch (e) { backupHandle = null; }
+}
+async function writeBackup() {
+  if (!backupHandle || backupNeedsPerm) return;
+  try {
+    if ((await backupHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') { backupNeedsPerm = true; return; }
+    const w = await backupHandle.createWritable(); await w.write(JSON.stringify(S, null, 1)); await w.close();
+  } catch (e) { console.warn('backup', e); }
+}
+
+/* ---------- dialogs ---------- */
+const dlg = () => $('#dlg');
+let dlgSubmit = null;
+function openDialog(title, body, foot, onSubmit) {
+  $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = body; $('#dlgFoot').innerHTML = foot;
+  dlgSubmit = onSubmit || null;
+  if (!dlg().open) dlg().showModal();
+  const f = $('#dlgBody input:not([type=checkbox]), #dlgBody select'); if (f) setTimeout(() => f.focus(), 30);
+}
+function closeDialog() { if (dlg().open) dlg().close(); dlgSubmit = null; }
+const fv = id => { const el = document.getElementById(id); return el ? (el.type === 'checkbox' ? el.checked : el.value) : null; };
+const catOptions = sel => S.categories.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+const durOptions = sel => DURS.map(d => `<option value="${d}" ${d === sel ? 'selected' : ''}>${d} dk</option>`).join('');
+const remOptions = sel => REMS.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+
+function openItem(k) {
+  const it = itemFromKey(k); if (!it) return;
+  const isR = it.kind === 'routine';
+  const body = `
+    <div class="kv"><i class="dot" style="--c:${cat(it.catId).color}"></i><span class="muted">${esc(cat(it.catId).name)}</span><span class="pill">${isR ? 'Rutin' : 'Görev'}</span><span class="muted">${fmtDate(it.date)}, ${DOW_L[isoDow(parseYmd(it.date)) - 1]}</span></div>
+    ${isR ? `<h3 style="font-size:17px">${esc(it.title)}</h3>` : `<label class="f">Başlık<input class="inp" id="fTitle" value="${esc(it.title)}"></label>`}
+    <div class="frow">
+      <label class="f">Tarih<input class="inp" type="date" id="fDate" value="${it.date}"></label>
+      <label class="f">Saat<input class="inp" type="time" step="300" id="fTime" value="${it.time || ''}"></label>
+      <label class="f">Süre<select class="sel" id="fDur">${durOptions(it.dur)}</select></label>
+    </div>
+    ${isR ? `<p class="muted" style="font-size:12.5px">Buradaki değişiklik yalnızca bu günü etkiler. Kalıcı değişiklik için rutini düzenle.</p>` :
+      `<div class="frow"><label class="f">Kategori<select class="sel" id="fCat">${catOptions(it.catId)}</select></label>
+       <label class="f">Hatırlatıcı<select class="sel" id="fRem">${remOptions(task(it.id).reminder ?? S.settings.reminder)}</select></label></div>
+       <label class="f">Not<textarea class="inp" id="fNote" rows="2">${esc(it.note || '')}</textarea></label>`}
+    <div class="status-row">
+      <button type="button" class="btn ${it.status === 'done' ? 'on' : ''}" data-act="dlgStatus" data-st="done" data-k="${k}">Tamamlandı</button>
+      ${isR ? `<button type="button" class="btn ${it.status === 'skip' ? 'on' : ''}" data-act="dlgStatus" data-st="skip" data-k="${k}">Bu gün atla</button>` : ''}
+      <button type="button" class="btn ghost" data-act="dlgFocus" data-k="${k}">${ICON.play}Odaklan</button>
+      <a class="btn ghost" href="${deeplink(it)}" target="_blank" rel="noopener">${ICON.out}Outlook'ta aç</a>
+    </div>`;
+  const foot = `<span class="left">
+      <button type="button" class="btn ghost danger" data-act="dlgRemove" data-k="${k}">${isR ? 'Bu günden kaldır' : 'Sil'}</button>
+      ${isR ? `<button type="button" class="btn ghost" data-act="editRoutine" data-rid="${it.rid}">Rutini düzenle</button>` : ''}</span>
+    <button type="button" class="btn" data-act="closeDlg">Vazgeç</button><button type="submit" class="btn pri">Kaydet</button>`;
+  openDialog(isR ? 'Rutin, bu gün' : 'Görev', body, foot, () => {
+    const date = fv('fDate') || it.date, time = fv('fTime') || null, dur = Number(fv('fDur'));
+    if (isR) {
+      const tNew = time || it.time;
+      let nid = it.id;
+      if (date !== it.date || tNew !== it.time) nid = moveItem(it, date, tNew) || it.id;
+      const moved = itemFromKey(`routine|${nid}|${date}`); if (moved) setItemDur(moved, dur);
+    } else {
+      const t = task(it.id);
+      Object.assign(t, { title: (fv('fTitle') || '').trim() || t.title, date, time, dur, catId: fv('fCat'), note: fv('fNote'), reminder: Number(fv('fRem')) });
+    }
+  });
+}
+function openTaskDialog(opts = {}) {
+  const t = opts.tid ? task(opts.tid) : null;
+  const scope = t ? t.scope : (opts.scope || 'day');
+  const ds = t && t.date ? t.date : ymd(view === 'week' || view === 'month' || view === 'today' ? cur : new Date());
+  const body = `
+    <label class="f">Başlık<input class="inp" id="fTitle" value="${esc(t ? t.title : '')}" placeholder="Ne yapılacak?"></label>
+    <div class="frow">
+      <label class="f">Ufuk<select class="sel" id="fScope">${[['day', 'Belirli gün'], ['week', 'Bu hafta içinde'], ['month', 'Bu ay içinde'], ['year', 'Bu yıl içinde']].map(([v, l]) => `<option value="${v}" ${v === scope ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="f">Tarih<input class="inp" type="date" id="fDate" value="${ds}"></label>
+    </div>
+    <div class="frow">
+      <label class="f">Saat (isteğe bağlı)<input class="inp" type="time" step="300" id="fTime" value="${t && t.time ? t.time : ''}"></label>
+      <label class="f">Süre<select class="sel" id="fDur">${durOptions(t ? t.dur : 30)}</select></label>
+      <label class="f">Hatırlatıcı<select class="sel" id="fRem">${remOptions(t ? (t.reminder ?? S.settings.reminder) : S.settings.reminder)}</select></label>
+    </div>
+    <label class="f">Kategori<select class="sel" id="fCat">${catOptions(t ? t.catId : 'c_genel')}</select></label>
+    <label class="f">Not<textarea class="inp" id="fNote" rows="2">${esc(t ? t.note : '')}</textarea></label>
+    <p class="muted" style="font-size:12.5px">Hafta, ay veya yıl ufkundaki görevler için tarih yalnızca dönemi belirler; saat ve süre gün seçildiğinde kullanılır.</p>`;
+  const foot = `${t ? `<span class="left"><button type="button" class="btn ghost danger" data-act="delTask" data-tid="${t.id}">Sil</button></span>` : ''}
+    <button type="button" class="btn" data-act="closeDlg">Vazgeç</button><button type="submit" class="btn pri">${t ? 'Kaydet' : 'Ekle'}</button>`;
+  openDialog(t ? 'Görevi düzenle' : 'Yeni görev', body, foot, () => {
+    const title = (fv('fTitle') || '').trim(); if (!title) { toast('Başlık gerekli.'); return false; }
+    const sc = fv('fScope'), date = fv('fDate') || todayStr();
+    const o = t || { id: uid('t'), done: false, doneAt: null, createdAt: new Date().toISOString() };
+    Object.assign(o, { title, scope: sc, date: sc === 'day' ? date : null, period: sc === 'day' ? null : periodKey(sc, parseYmd(date)),
+      time: fv('fTime') || null, dur: Number(fv('fDur')), reminder: Number(fv('fRem')), catId: fv('fCat'), note: fv('fNote') });
+    if (!t) S.tasks.push(o);
+    toast(t ? 'Görev güncellendi.' : 'Görev eklendi.');
+  });
+}
+const slotRows = sls => sls.map(sl => `<div class="slot-row" data-sid="${sl.id || ''}">
+    <input class="inp sm" type="time" step="300" value="${sl.time || ''}" aria-label="Saat (boş = saatsiz)">
+    <select class="sel sm">${durOptions(sl.dur || 15)}</select>
+    <button type="button" class="icon-btn sm" data-act="delSlot" aria-label="Bu saati kaldır" title="Kaldır">${ICON.x}</button>
+  </div>`).join('');
+function openRoutineDialog(rid) {
+  const r = rid ? routine(rid) : null;
+  const x = r || newRoutine({ time: '07:00' });
+  const body = `
+    <label class="f">Rutin adı<input class="inp" id="fTitle" value="${esc(r ? r.title : '')}" placeholder="ör. spl/cfa/tjia"></label>
+    <label class="f">Kategori<select class="sel" id="fCat">${catOptions(x.catId)}</select></label>
+    <div><div class="f" style="margin-bottom:5px">Günler</div>
+      <span class="days" id="fDays">${DOW.map((d, i) => `<button type="button" class="${x.days.includes(i + 1) ? 'on' : ''}" data-act="toggleOn" data-d="${i + 1}">${d.slice(0, 2)}</button>`).join('')}</span>
+      <span class="kv" style="margin-top:6px"><button type="button" class="btn sm ghost" data-act="dayPreset" data-p="all">Her gün</button><button type="button" class="btn sm ghost" data-act="dayPreset" data-p="wd">Hafta içi</button><button type="button" class="btn sm ghost" data-act="dayPreset" data-p="we">Hafta sonu</button></span></div>
+    <div><div class="f" style="margin-bottom:5px">Günde kaç kez, hangi saatlerde</div>
+      <div id="fSlots" style="display:flex;flex-direction:column;gap:6px">${slotRows(x.slots)}</div>
+      <div class="kv" style="margin-top:6px"><button type="button" class="btn sm ghost" data-act="addSlot">${ICON.plus}Saat ekle</button>
+        <span class="muted" style="font-size:12px">Boş saat = saatsiz. Her satır, seçili günlerde ayrı bir tekrar (ör. 5 satır × 25 dk).</span></div></div>
+    <div class="frow">
+      <label class="f">Hatırlatıcı<select class="sel" id="fRem">${remOptions(x.reminder)}</select></label>
+      <label class="f">Başlangıç<input class="inp" type="date" id="fStart" value="${x.start}"></label>
+      <label class="f">Bitiş (isteğe bağlı)<input class="inp" type="date" id="fEnd" value="${x.end || ''}"></label>
+    </div>
+    <label class="f">Not<textarea class="inp" id="fNote" rows="2">${esc(x.note)}</textarea></label>`;
+  const foot = `${r ? `<span class="left"><button type="button" class="btn ghost danger" data-act="delRoutine" data-rid="${r.id}">Rutini sil</button></span>` : ''}
+    <button type="button" class="btn" data-act="closeDlg">Vazgeç</button><button type="submit" class="btn pri">${r ? 'Kaydet' : 'Ekle'}</button>`;
+  openDialog(r ? 'Rutini düzenle' : 'Yeni rutin', body, foot, () => {
+    const title = (fv('fTitle') || '').trim(); if (!title) { toast('Ad gerekli.'); return false; }
+    const days = $$('#fDays button.on').map(b => Number(b.dataset.d));
+    const slots = $$('#fSlots .slot-row').map(row => ({ id: row.dataset.sid || uid('sl'),
+      time: row.querySelector('input').value || null, dur: Number(row.querySelector('select').value) || 15 }));
+    if (!slots.length) slots.push({ id: uid('sl'), time: null, dur: 15 });
+    slots.sort((a, b) => (a.time || '99') < (b.time || '99') ? -1 : 1);
+    const o = r || x;
+    Object.assign(o, { title, catId: fv('fCat'), days, slots, reminder: Number(fv('fRem')),
+      start: fv('fStart') || todayStr(), end: fv('fEnd') || null, note: fv('fNote') });
+    if (!r) S.routines.push(o);
+  });
+}
+function openGoalDialog(gid, h) {
+  const g = gid ? S.goals.find(x => x.id === gid) : null;
+  const x = g || { title: '', horizon: h || 'week', metric: 'focus', target: 10, catId: 'c_kariyer', routineId: '', recurring: true };
+  const body = `
+    <label class="f">Hedef<input class="inp" id="fTitle" value="${esc(x.title)}" placeholder="ör. CFA çalışması"></label>
+    <div class="frow">
+      <label class="f">Ufuk<select class="sel" id="fH">${[['week', 'Haftalık'], ['month', 'Aylık'], ['year', 'Yıllık']].map(([v, l]) => `<option value="${v}" ${v === x.horizon ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="f">Ölçüm<select class="sel" id="fMetric" data-chg="goalMetric">${[['focus', 'Odak süresi (saat)'], ['routine', 'Rutin istikrarı (%)'], ['tasks', 'Tamamlanan görev'], ['count', 'Elle sayaç']].map(([v, l]) => `<option value="${v}" ${v === x.metric ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="f">Hedef değer<input class="inp" type="number" min="1" id="fTarget" value="${x.target}"></label>
+    </div>
+    <label class="f" id="wCat">Kategori (odak için)<select class="sel" id="fCat"><option value="">Tüm odak</option>${catOptions(x.catId)}</select></label>
+    <label class="f" id="wRoutine">Rutin (istikrar için)<select class="sel" id="fRoutine"><option value="">Tüm rutinler</option>${S.routines.map(r => `<option value="${r.id}" ${r.id === x.routineId ? 'selected' : ''}>${esc(r.title)}</option>`).join('')}</select></label>
+    <label class="check"><input type="checkbox" id="fRec" ${x.recurring ? 'checked' : ''}> Her dönem tekrarla</label>`;
+  const foot = `${g ? `<span class="left"><button type="button" class="btn ghost danger" data-act="delGoal" data-gid="${g.id}">Sil</button></span>` : ''}
+    <button type="button" class="btn" data-act="closeDlg">Vazgeç</button><button type="submit" class="btn pri">${g ? 'Kaydet' : 'Ekle'}</button>`;
+  openDialog(g ? 'Hedefi düzenle' : 'Yeni hedef', body, foot, () => {
+    const title = (fv('fTitle') || '').trim(); if (!title) { toast('Hedef adı gerekli.'); return false; }
+    const hz = fv('fH');
+    const o = g || { id: uid('g'), counts: {} };
+    Object.assign(o, { title, horizon: hz, metric: fv('fMetric'), target: Number(fv('fTarget')) || 1, catId: fv('fCat') || null,
+      routineId: fv('fRoutine') || null, recurring: fv('fRec'), period: periodKey(hz, cur) });
+    if (!g) S.goals.push(o);
+  });
+  goalFieldVis();
+}
+function goalFieldVis() { const m = fv('fMetric'); const a = $('#wCat'), b = $('#wRoutine'); if (a) a.style.display = m === 'focus' ? '' : 'none'; if (b) b.style.display = m === 'routine' ? '' : 'none'; }
+function dayOutlookDialog(ds) {
+  const items = itemsFor(ds);
+  const body = items.length ? `<p class="muted" style="font-size:13px">Rutin serilerini Outlook sayfasından bir kez aktardıysan burada yalnızca görevleri ve bu güne özel değişiklikleri göndermen yeterli.</p>
+    <ul class="tl">${items.map(i => `<li style="--c:${cat(i.catId).color}"><i class="dot"></i><span class="muted" style="width:44px">${i.time || '—'}</span><span class="t">${esc(i.title)}</span>${i.kind === 'task' || i.moved ? '<span class="pill">tek seferlik</span>' : ''}<a class="btn sm" href="${deeplink(i)}" target="_blank" rel="noopener">Aç</a></li>`).join('')}</ul>`
+    : '<div class="empty"><b>Bu gün boş</b></div>';
+  openDialog(`${fmtDate(ds)}, ${DOW_L[isoDow(parseYmd(ds)) - 1]}`, body,
+    `<span class="left"><button type="button" class="btn" data-act="dayIcs" data-date="${ds}">${ICON.down}Günün tümü .ics</button></span><button type="button" class="btn pri" data-act="closeDlg">Kapat</button>`);
+}
+
+/* ---------- toast ---------- */
+function toast(msg, actLabel, fn) {
+  const el = document.createElement('div'); el.className = 'toast';
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  if (actLabel) { const b = document.createElement('button'); b.textContent = actLabel; b.onclick = () => { fn(); el.remove(); }; el.appendChild(b); }
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), actLabel ? 9000 : 3200);
+}
+
+/* ---------- actions ---------- */
+const A = {
+  go: b => go(b.dataset.view),
+  nav: b => navStep(Number(b.dataset.dir)),
+  closeDlg: () => closeDialog(),
+  dismissSeed: () => { S.meta.seeded = false; commit(); },
+  newTask: b => openTaskDialog({ scope: b.dataset.scope }),
+  done: b => { const it = itemFromKey(b.dataset.k); if (it) { toggleDone(it); commit(); } },
+  skip: b => { const it = itemFromKey(b.dataset.k); if (it) { toggleSkip(it); commit(); } },
+  openItem: b => openItem(b.dataset.k),
+  openDay: b => { cur = parseYmd(b.dataset.date); go('today'); },
+  gotoMonth: b => { cur = new Date(cur.getFullYear(), Number(b.dataset.m), 1); go('month'); },
+  focusOn: b => { linkPomo(b.dataset.k); if (view !== 'today') { cur = new Date(); go('today'); } else render(); if (!pomoRunning()) pomoStart(); },
+  dlgFocus: b => { closeDialog(); A.focusOn(b); },
+  dlgStatus: b => { const it = itemFromKey(b.dataset.k); if (!it) return; if (b.dataset.st === 'done') toggleDone(it); else toggleSkip(it); persist(); render(); openItem(b.dataset.k); },
+  dlgRemove: b => { const it = itemFromKey(b.dataset.k); if (!it) return; removeFromDay(it); closeDialog(); commit(); toast(it.kind === 'task' ? 'Görev silindi.' : 'Bu günden kaldırıldı.'); },
+  pomoToggle: () => pomoRunning() ? pomoPause() : pomoStart(),
+  pomoReset: () => pomoReset(),
+  pomoFinish: () => { if (pomoRunning() || S.pomo.left != null) pomoFinish(false); else toast('Sayaç çalışmıyor.'); },
+  pomoMode: b => { Object.assign(S.pomo, { mode: b.dataset.mode, endsAt: null, left: null, startedAt: null }); commit(); },
+  askNotify: () => { if ('Notification' in window) Notification.requestPermission().then(p => toast(p === 'granted' ? 'Bildirimler açık.' : 'Bildirim izni verilmedi.')); },
+  editRoutine: b => openRoutineDialog(b.dataset.rid),
+  delRoutine: b => { const r = routine(b.dataset.rid); if (!confirm(`"${r.title}" silinsin mi? Geçmiş kayıtları istatistiklerden düşer.`)) return; S.routines = S.routines.filter(x => x.id !== r.id); closeDialog(); commit(); },
+  rtDay: b => { const r = routine(b.dataset.rid), d = Number(b.dataset.d); r.days = r.days.includes(d) ? r.days.filter(x => x !== d) : [...r.days, d].sort(); commit(); },
+  rtPause: b => { const r = routine(b.dataset.rid), t = todayStr();
+    if (isPausedNow(r)) { r.paused.forEach(p => { if (!p.to || p.to >= t) p.to = ymd(addDays(new Date(), -1)); }); r.paused = r.paused.filter(p => p.to >= p.from); toast(`${r.title} sürdürüldü.`); }
+    else { r.paused.push({ from: t, to: null }); toast(`${r.title} bugünden itibaren durduruldu.`); }
+    commit(); },
+  toggleOn: b => b.classList.toggle('on'),
+  addSlot: () => { const w = $('#fSlots'); if (w) w.insertAdjacentHTML('beforeend', slotRows([{ id: '', time: '', dur: 15 }])); },
+  delSlot: b => { const w = $('#fSlots'); const row = b.closest('.slot-row'); if (row && w && w.children.length > 1) row.remove(); },
+  dayPreset: b => { const p = b.dataset.p; $$('#fDays button').forEach(x => { const d = Number(x.dataset.d); x.classList.toggle('on', p === 'all' || (p === 'wd' && d <= 5) || (p === 'we' && d >= 6)); }); },
+  addCat: () => { S.categories.push({ id: uid('c'), name: 'Yeni kategori', color: Object.values(COLORS)[S.categories.length % 10] }); commit(); },
+  delCat: b => { if (S.categories.length <= 1) return; if (!confirm('Kategori silinsin mi? Bağlı işler "Genel"e geçer.')) return; const id = b.dataset.cid; S.categories = S.categories.filter(c => c.id !== id); const fb = S.categories[0].id; [...S.routines, ...S.tasks].forEach(x => { if (x.catId === id) x.catId = fb; }); commit(); },
+  catColor: b => { const c = S.categories.find(x => x.id === b.dataset.cid);
+    openDialog('Renk seç', `<div class="swatches">${Object.values(COLORS).map(v => `<button type="button" class="sw ${v === c.color ? 'on' : ''}" style="--c:${v}" data-act="pickColor" data-cid="${c.id}" data-v="${v}" aria-label="${v}"></button>`).join('')}</div>`, '<button type="button" class="btn" data-act="closeDlg">Kapat</button>'); },
+  pickColor: b => { S.categories.find(x => x.id === b.dataset.cid).color = b.dataset.v; closeDialog(); commit(); },
+  editTask: b => openTaskDialog({ tid: b.dataset.tid }),
+  delTask: b => { S.tasks = S.tasks.filter(t => t.id !== b.dataset.tid); closeDialog(); commit(); },
+  htDone: b => { const t = task(b.dataset.tid); t.done = !t.done; t.doneAt = t.done ? new Date().toISOString() : null; commit(); },
+  addHTask: b => { const inp = b.parentElement.querySelector('input'); const v = inp.value.trim(); if (!v) return;
+    S.tasks.push({ id: uid('t'), title: v, note: '', catId: 'c_genel', scope: b.dataset.h, date: null, period: b.dataset.pk, time: null, dur: 30, reminder: S.settings.reminder, done: false, doneAt: null, createdAt: new Date().toISOString() });
+    commit(); const again = $(`input[data-h="${b.dataset.h}"]`); if (again) again.focus(); },
+  editGoal: b => openGoalDialog(b.dataset.gid, b.dataset.h),
+  delGoal: b => { S.goals = S.goals.filter(g => g.id !== b.dataset.gid); closeDialog(); commit(); },
+  goalCount: b => { const g = S.goals.find(x => x.id === b.dataset.gid); if (!g) return; g.counts[b.dataset.pk] = Math.max(0, (g.counts[b.dataset.pk] || 0) + Number(b.dataset.d)); commit(); },
+  bgType: b => { const t = b.dataset.v; const bg = S.settings.bg;
+    if (bg.type === t) return;
+    bg.type = t;
+    bg.value = t === 'color' ? BG_COLORS[0] : t === 'pattern' ? 'dots' : t === 'motif' ? 'star' : t === 'image' ? 'dawn' : '';
+    bg.dim = t === 'image' ? 30 : t === 'color' ? 0 : 0;
+    commit(); },
+  bgPick: b => { S.settings.bg.value = b.dataset.v; commit(); },
+  bgUpload: () => $('#bgFile').click(),
+  repRange: b => { S.ui.repRange = b.dataset.r; commit(); },
+  copyReport: () => navigator.clipboard.writeText($('#reportText').textContent).then(() => toast('Özet panoya kopyalandı.')),
+  dlReport: () => download(`mecal-ozet-${todayStr()}.md`, $('#reportText').textContent, 'text/markdown'),
+  mailReport: () => { const tx = $('#reportText').textContent; location.href = `mailto:?subject=${encodeURIComponent(tx.split('\n')[0])}&body=${encodeURIComponent(tx)}`; },
+  saveReport: b => { S.reports.unshift({ id: uid('rep'), key: 'manual:' + Date.now(), label: b.dataset.label + ' özeti', from: b.dataset.from, to: b.dataset.to, createdAt: new Date().toISOString(), text: $('#reportText').textContent }); commit(); toast('Arşive kaydedildi.'); },
+  viewReport: b => { const r = S.reports.find(x => x.id === b.dataset.id); if (!r) return;
+    openDialog(r.label, `<div class="report-text">${esc(r.text)}</div><p class="muted" style="font-size:12px">Oluşturulma: ${new Date(r.createdAt).toLocaleString('tr-TR')}</p>`,
+      `<button type="button" class="btn" data-act="copyText" data-id="${r.id}">Kopyala</button><button type="button" class="btn pri" data-act="closeDlg">Kapat</button>`); },
+  copyText: b => navigator.clipboard.writeText(S.reports.find(x => x.id === b.dataset.id).text).then(() => toast('Kopyalandı.')),
+  delReport: b => { S.reports = S.reports.filter(r => r.id !== b.dataset.id); commit(); },
+  dayOutlook: b => dayOutlookDialog(b.dataset.date),
+  dayIcs: b => { const ds = b.dataset.date;
+    const ev = itemsFor(ds).map(i => vevent({ uid: `mecal-day-${i.kind}-${i.id}-${ds}@mecal.local`, ds, time: i.time, dur: i.dur, title: i.title, note: i.note, catName: cat(i.catId).name, reminder: i.kind === 'routine' ? ((rtOf(i.id) || {}).reminder ?? S.settings.reminder) : (task(i.id).reminder ?? S.settings.reminder) }));
+    if (!ev.length) { toast('Bu gün boş.'); return; }
+    download(`mecal-${ds}.ics`, icsWrap(ev), 'text/calendar'); toast(`${ev.length} etkinlik indirildi. Rutin serilerini ayrıca aktardıysan bu dosya kopya üretir.`); },
+  icsRoutines: () => { const ev = routineEvents(!S.ui.icsUntimed); if (!ev.length) { toast('Aktarılacak rutin yok (gün seçili değil).'); return; }
+    download(`mecal-rutinler-${todayStr()}.ics`, icsWrap(ev), 'text/calendar'); toast(`${ev.length} rutin serisi indirildi.`); },
+  icsOneOff: () => { const a = $('#icsFrom').value, b = $('#icsTo').value; if (!a || !b || a > b) { toast('Geçerli bir tarih aralığı seç.'); return; }
+    const ev = oneOffEvents(a, b); if (!ev.length) { toast('Bu aralıkta tek seferlik iş yok.'); return; }
+    download(`mecal-tek-seferlik-${a}_${b}.ics`, icsWrap(ev), 'text/calendar'); toast(`${ev.length} etkinlik indirildi.`); },
+  gRoutines: () => gRun('Rutinler eşitleniyor', gSyncRoutines),
+  gTasks: () => { const m = mondayOf(new Date()); gRun('Bu haftanın işleri eşitleniyor', () => gSyncTasks(ymd(m), ymd(addDays(m, 6)))); },
+  gWipe: () => { if (!confirm('Outlook\'taki MeCal takvimi ve içindeki tüm etkinlikler silinsin mi?')) return;
+    gRun('MeCal takvimi siliniyor', async () => { await gToken(); if (S.graph.calendarId) await gFetch('/me/calendars/' + S.graph.calendarId, { method: 'DELETE' }).catch(e => { if (e.status !== 404) throw e; }); S.graph = { calendarId: null, map: {} }; render(); return null; }); },
+  exportJson: () => download(`mecal-yedek-${todayStr()}.json`, JSON.stringify(S, null, 1), 'application/json'),
+  importFile: () => $('#fileImport').click(),
+  linkBackup: async () => { try { backupHandle = await window.showSaveFilePicker({ suggestedName: 'mecal-yedek.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] }); backupNeedsPerm = false; await idb.set('backupHandle', backupHandle); await writeBackup(); render(); toast('Otomatik yedek açık.'); } catch (e) { if (e.name !== 'AbortError') toast('Yedek dosyası seçilemedi.'); } },
+  resumeBackup: async () => { if ((await backupHandle.requestPermission({ mode: 'readwrite' })) === 'granted') { backupNeedsPerm = false; await writeBackup(); render(); toast('Yedekleme sürüyor.'); } },
+  resetAll: () => { if (!confirm('Tüm veriler silinsin mi? Bu geri alınamaz.')) return; localStorage.removeItem(KEY); localStorage.removeItem('mecal_data_v6'); try { localStorage.removeItem('mecal_bg_img'); } catch (e) {} location.reload(); }
+};
+function linkPomo(k) {
+  const it = itemFromKey(k); if (!it) return;
+  S.pomo.link = { k, kind: it.kind, id: it.id, date: it.date, title: it.title, catId: it.catId };
+  persist();
+}
+const C = {
+  pomoLink: el => { if (el.value) linkPomo(el.value); else { S.pomo.link = null; persist(); } },
+  bgDim: el => { S.settings.bg.dim = Number(el.value); persist(); applyBg(); },
+  rtCat: el => { routine(el.dataset.rid).catId = el.value; commit(); },
+  rtTime: el => { routine(el.dataset.rid).slots[0].time = el.value || null; commit(); },
+  rtDur: el => { routine(el.dataset.rid).slots[0].dur = Number(el.value); commit(); },
+  catName: el => { S.categories.find(c => c.id === el.dataset.cid).name = el.value.trim() || 'Kategori'; persist(); },
+  repFrom: el => { S.ui.repFrom = el.value; commit(); },
+  repTo: el => { S.ui.repTo = el.value; commit(); },
+  setReport: el => { S.settings.report = el.value; persist(); autoReport(); render(); },
+  icsUntimed: el => { S.ui.icsUntimed = el.checked; persist(); },
+  busyFree: el => { S.settings.busyFree = el.checked; persist(); },
+  clientId: el => { S.settings.clientId = el.value.trim(); G.app = null; G.account = null; persist(); },
+  calName: el => { S.settings.calendarName = el.value.trim() || 'MeCal'; persist(); },
+  dayStart: el => { S.settings.dayStart = Number(el.value); weekScroll = null; commit(); },
+  dayEnd: el => { S.settings.dayEnd = Number(el.value); commit(); },
+  theme: el => { S.settings.theme = el.value; commit(); },
+  reminder: el => { S.settings.reminder = Number(el.value); persist(); },
+  pFocus: el => { S.settings.focus = clamp(Number(el.value) || 25, 5, 120); persist(); paintPomo(); },
+  pShort: el => { S.settings.short = clamp(Number(el.value) || 5, 1, 30); persist(); },
+  pLong: el => { S.settings.long = clamp(Number(el.value) || 15, 5, 60); persist(); },
+  pEvery: el => { S.settings.every = clamp(Number(el.value) || 4, 2, 8); persist(); },
+  autoBreak: el => { S.settings.autoBreak = el.checked; persist(); },
+  sound: el => { S.settings.sound = el.checked; persist(); if (el.checked) beep(); },
+  goalMetric: () => goalFieldVis()
+};
+/* ---------- background engine ---------- */
+const BG_COLORS = ['#2446A8', '#0E8A8A', '#3E8A4E', '#C98A12', '#7B4397', '#C2477A', '#2F86C9', '#5E6B82'];
+const isDark = () => { const t = document.documentElement.getAttribute('data-theme'); return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches); };
+const svgUri = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+function patternCss(name) {
+  const c = isDark() ? 'rgba(186,202,236,.085)' : 'rgba(21,33,59,.065)';
+  const c2 = isDark() ? 'rgba(186,202,236,.055)' : 'rgba(21,33,59,.045)';
+  switch (name) {
+    case 'grid': return { image: `linear-gradient(${c2} 1px,transparent 1px),linear-gradient(90deg,${c2} 1px,transparent 1px)`, size: '26px 26px' };
+    case 'diag': return { image: `repeating-linear-gradient(45deg,${c2} 0 1px,transparent 1px 15px)`, size: 'auto' };
+    case 'cross': return { image: `radial-gradient(circle,transparent 8px,transparent 8px),linear-gradient(${c} 1.4px,transparent 1.4px),linear-gradient(90deg,${c} 1.4px,transparent 1.4px)`, size: '30px 30px', pos: '0 0,14.3px 10px,10px 14.3px' };
+    default: return { image: `radial-gradient(${c} 1.2px,transparent 1.2px)`, size: '22px 22px' };
+  }
+}
+function motifSvg(name) {
+  const c = isDark() ? '#93a5cc' : '#43506b';
+  const o = isDark() ? .12 : .10;
+  const g = `fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1.3'`;
+  if (name === 'wave') return `<svg xmlns='http://www.w3.org/2000/svg' width='56' height='30' viewBox='0 0 56 30'><g ${g}><path d='M0 10 Q14 0 28 10 T56 10'/><path d='M0 24 Q14 14 28 24 T56 24'/></g></svg>`;
+  if (name === 'leaf') return `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g ${g}><path d='M12 40c0-11 9-20 20-20 0 11-9 20-20 20z'/><path d='M14 38L30 22'/><path d='M52 24c0 8-6.5 14.5-14.5 14.5C37.5 30.5 44 24 52 24z' transform='rotate(180 44.75 31.25)'/></g></svg>`;
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><g ${g}><g transform='translate(36 36)'><rect x='-16' y='-16' width='32' height='32'/><rect x='-16' y='-16' width='32' height='32' transform='rotate(45)'/></g><circle cx='0' cy='0' r='5'/><circle cx='72' cy='0' r='5'/><circle cx='0' cy='72' r='5'/><circle cx='72' cy='72' r='5'/></g></svg>`;
+}
+function sceneSvg(name) {
+  const W = `xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900' preserveAspectRatio='xMidYMid slice'`;
+  if (name === 'sea') return `<svg ${W}><defs><linearGradient id='a' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1c3a63'/><stop offset='.5' stop-color='#e0784f'/><stop offset='.62' stop-color='#f5b06a'/><stop offset='.63' stop-color='#173d59'/><stop offset='1' stop-color='#0c2138'/></linearGradient></defs><rect width='1600' height='900' fill='url(#a)'/><circle cx='800' cy='545' r='62' fill='#ffe6b0' opacity='.95'/><g stroke='#ffd9a0' stroke-width='3' opacity='.45'><path d='M300 620h1000M420 660h760M540 700h520M640 745h320'/></g></svg>`;
+  if (name === 'night') return `<svg ${W}><defs><linearGradient id='a' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#080f26'/><stop offset='.7' stop-color='#152246'/><stop offset='1' stop-color='#233458'/></linearGradient></defs><rect width='1600' height='900' fill='url(#a)'/><g fill='#dfe8ff'><circle cx='180' cy='120' r='1.7'/><circle cx='420' cy='80' r='1.2'/><circle cx='640' cy='190' r='1.9'/><circle cx='900' cy='90' r='1.3'/><circle cx='1150' cy='170' r='1.8'/><circle cx='1380' cy='110' r='1.2'/><circle cx='300' cy='300' r='1.4'/><circle cx='760' cy='330' r='1.1'/><circle cx='1240' cy='320' r='1.5'/><circle cx='520' cy='420' r='1.2'/><circle cx='1460' cy='260' r='1.6'/><circle cx='90' cy='420' r='1.3'/></g><circle cx='1230' cy='210' r='58' fill='#f2ecd8' opacity='.92'/><circle cx='1208' cy='196' r='52' fill='#152246'/><path d='M0 700 L260 560 470 660 700 540 950 680 1180 590 1400 690 1600 620 V900 H0 Z' fill='#0b1330'/><path d='M0 790 L320 670 620 770 930 660 1250 780 1600 700 V900 H0 Z' fill='#060b1e'/></svg>`;
+  if (name === 'mist') return `<svg ${W}><defs><linearGradient id='a' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#dfe9e2'/><stop offset='1' stop-color='#aac4b2'/></linearGradient></defs><rect width='1600' height='900' fill='url(#a)'/><path d='M0 560 C300 480 520 640 820 560 1120 480 1360 620 1600 540 V900 H0 Z' fill='#7fa28c' opacity='.6'/><path d='M0 660 C280 590 560 730 880 650 1200 570 1420 700 1600 640 V900 H0 Z' fill='#5c8571' opacity='.75'/><path d='M0 770 C320 700 640 820 980 750 1280 690 1460 780 1600 740 V900 H0 Z' fill='#3c5f4d'/><rect width='1600' height='900' fill='#eef4ef' opacity='.14'/></svg>`;
+  return `<svg ${W}><defs><linearGradient id='a' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1b2a5e'/><stop offset='.45' stop-color='#5a4a8a'/><stop offset='.72' stop-color='#c96f6a'/><stop offset='1' stop-color='#f2c894'/></linearGradient></defs><rect width='1600' height='900' fill='url(#a)'/><circle cx='800' cy='640' r='68' fill='#ffdba8' opacity='.9'/><path d='M0 700 L220 560 380 660 560 540 760 680 940 590 1140 700 1330 610 1600 690 V900 H0 Z' fill='#1d2440' opacity='.88'/><path d='M0 780 L260 660 480 760 720 650 980 770 1240 680 1600 760 V900 H0 Z' fill='#141a30'/></svg>`;
+}
+function applyBg() {
+  const el = $('#bgLayer'); if (!el) return;
+  const bg = S.settings.bg || { type: 'plain' };
+  const on = bg.type && bg.type !== 'plain';
+  document.body.classList.toggle('has-bg', on);
+  el.style.setProperty('--bg-dim', String(clamp(Number(bg.dim) || 0, 0, 90) / 100));
+  el.style.backgroundImage = ''; el.style.backgroundColor = ''; el.style.backgroundSize = ''; el.style.backgroundRepeat = ''; el.style.backgroundPosition = '';
+  if (!on) return;
+  if (bg.type === 'color') el.style.backgroundColor = `color-mix(in srgb, ${bg.value || BG_COLORS[0]} ${isDark() ? 26 : 18}%, var(--paper))`;
+  else if (bg.type === 'pattern') { const p = patternCss(bg.value); el.style.backgroundImage = p.image; el.style.backgroundSize = p.size; if (p.pos) el.style.backgroundPosition = p.pos; el.style.backgroundRepeat = 'repeat'; }
+  else if (bg.type === 'motif') { el.style.backgroundImage = svgUri(motifSvg(bg.value)); el.style.backgroundSize = 'auto'; el.style.backgroundRepeat = 'repeat'; }
+  else if (bg.type === 'image') {
+    if (bg.value === 'custom') { let d = null; try { d = localStorage.getItem('mecal_bg_img'); } catch (e) {} el.style.backgroundImage = d ? `url("${d}")` : 'none'; }
+    else el.style.backgroundImage = svgUri(sceneSvg(bg.value || 'dawn'));
+    el.style.backgroundSize = 'cover'; el.style.backgroundRepeat = 'no-repeat';
+  }
+}
+function applyTheme() {
+  const t = S.settings.theme;
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  $('meta[name=theme-color]').setAttribute('content', bg);
+  applyBg();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S) applyTheme(); });
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const fn = A[b.dataset.act]; if (!fn) return;
+  e.preventDefault(); fn(b, e);
+});
+document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (el && C[el.dataset.chg]) C[el.dataset.chg](el); });
+document.addEventListener('keydown', e => {
+  const inField = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.enter) { e.preventDefault(); A[e.target.dataset.enter](e.target.nextElementSibling); return; }
+  if (inField || dlg().open || e.metaKey || e.ctrlKey || e.altKey) return;
+  const order = ['today', 'week', 'month', 'year', 'routines', 'plan', 'reports', 'outlook'];
+  if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openTaskDialog({}); }
+  else if (e.key === ' ' && !e.target.closest('button')) { e.preventDefault(); pomoRunning() ? pomoPause() : pomoStart(); }
+  else if (e.key === 'ArrowLeft' && $('#hNav').style.display !== 'none') navStep(-1);
+  else if (e.key === 'ArrowRight' && $('#hNav').style.display !== 'none') navStep(1);
+  else if (e.key === 't' || e.key === 'T') navStep(0);
+  else if (/^[1-8]$/.test(e.key)) go(order[Number(e.key) - 1]);
+});
+$('#dlgForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (dlgSubmit) { const r = dlgSubmit(); if (r === false) return; }
+  closeDialog(); commit();
+});
+$('#fileImport').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const o = JSON.parse(rd.result);
+      if (o.templates && (o.schedule || o.dailyPlan)) {
+        if (!confirm('Eski MeCal yedeği bulundu. Rutinler bu dosyadan yeniden oluşturulsun mu? Mevcut rutin listesi değişir; görevler, kayıtlar ve raporlar korunur.')) return;
+        const n = migrateV6(o); commit(); toast(`${n.routines} rutin ve ${n.tasks} görev aktarıldı. Günleri ve saatleri Rutinler sayfasında kontrol et.`); go('routines');
+      } else if (Number(o.v) >= 7 && Array.isArray(o.routines)) {
+        if (!confirm('Bu yedek mevcut tüm verinin yerine geçsin mi?')) return;
+        S = normalize(o); commit(); toast('Yedek geri yüklendi.');
+      } else toast('Dosya tanınmadı: MeCal yedeği değil.');
+    } catch (err) { toast('Dosya okunamadı: ' + err.message); }
+  };
+  rd.readAsText(f); e.target.value = '';
+});
+$('#bgFile').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const MX = 1920, k = Math.min(1, MX / Math.max(img.width, img.height));
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k));
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    let q = .82, data = cv.toDataURL('image/jpeg', q);
+    while (data.length > 2.6e6 && q > .4) { q -= .12; data = cv.toDataURL('image/jpeg', q); }
+    try { localStorage.setItem('mecal_bg_img', data); }
+    catch (err) { toast('Görsel kaydedilemedi: depolama dolu. Daha küçük bir görsel dene.'); return; }
+    S.settings.bg = { type: 'image', value: 'custom', dim: S.settings.bg.dim ?? 30 };
+    commit(); toast('Arka plan görselin ayarlandı.');
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Görsel açılamadı.'); };
+  img.src = url;
+});
+dlg().addEventListener('close', () => { dlgSubmit = null; });
+window.addEventListener('storage', e => { if (e.key === KEY && e.newValue) { try { S = normalize(JSON.parse(e.newValue)); render(); } catch (err) {} } });
+
+let lastMin = -1, lastDay = todayStr();
+function tick() {
+  const now = new Date();
+  $('#railClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if (S.pomo.endsAt && Date.now() >= S.pomo.endsAt) pomoFinish(true);
+  else paintPomo();
+  const m = now.getHours() * 60 + now.getMinutes();
+  if (m !== lastMin) {
+    lastMin = m;
+    if (todayStr() !== lastDay) { lastDay = todayStr(); autoReport(); render(); return; }
+    const st = S.settings.dayStart * 60, span = S.settings.dayEnd * 60 - st;
+    const nd = $('#rbNeedle'), ps = $('#rbPast'), rn = $('#rbNow'), wl = $('#wkNow');
+    if (nd) nd.style.left = (m - st) / span * 100 + '%';
+    if (ps) ps.style.width = (m - st) / span * 100 + '%';
+    if (rn && ymd(cur) === todayStr()) rn.textContent = fromMin(m);
+    if (wl) wl.style.top = (m - st) * PPM + 'px';
+  }
+}
+
+(async function init() {
+  load();
+  await initBackup();
+  render();
+  autoReport();
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
